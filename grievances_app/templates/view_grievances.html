@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}View Grievances{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h2 class="text-center">My Grievances</h2>
+    <p class="text-center text-muted">Here are the grievances you have submitted.</p>
+
+    {% if grievances %}
+    <table class="table table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Date Filed</th>
+                <th>Description</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grievance in grievances %}
+            <tr>
+                <td>{{ grievance.comp_id }}</td>
+                <td>{{ grievance.comp_datefiled.strftime('%Y-%m-%d') }}</td>
+                <td>{{ grievance.comp_descr[:50] }}...</td>
+                <td>{{ grievance.comp_dept }}</td>
+                <td>
+                    <span class="badge {% if grievance.comp_status == 'Pending' %} bg-warning 
+                                     {% elif grievance.comp_status == 'Resolved' %} bg-success 
+                                     {% else %} bg-info {% endif %}">
+                        {{ grievance.comp_status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('view_grievance_detail', comp_id=grievance.comp_id) }}" class="btn btn-info btn-sm">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info text-center mt-4">No grievances found.</div>
+    {% endif %}
+</div>
+{% endblock %}
