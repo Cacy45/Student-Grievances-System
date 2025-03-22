@@ -11,6 +11,24 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select id="role" name="role" class="form-select" required onchange="toggleDepartmentField()">
+                    <option value="student">Student</option>
+                    <option value="admin">Admin</option>
+                    <option value="supervisor">Supervisor</option>
+                </select>
+            </div>
+
+            <div id="departmentField" class="mb-3" style="display: none;">
+                <label for="dept_id" class="form-label">Department</label>
+                <select id="dept_id" name="dept_id" class="form-select">
+                    {% for dept in departments %}
+                        <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
                 <label for="fname" class="form-label">First Name</label>
                 <input type="text" id="fname" name="fname" class="form-control" required>
             </div>
@@ -41,18 +59,17 @@
             </div>
 
             <div class="mb-3">
-                <label for="role" class="form-label">Role</label>
-                <select id="role" name="role" class="form-select" required>
-                    <option value="student">Student</option>
-                    <option value="admin">Admin</option>
-                    <option value="supervisor">Supervisor</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
                 <button type="submit" class="btn btn-primary">Register</button>
             </div>
         </form>
         <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
     </div>
+
+    <script>
+        function toggleDepartmentField() {
+            var role = document.getElementById("role").value;
+            var deptField = document.getElementById("departmentField");
+            deptField.style.display = (role === "admin" || role === "supervisor") ? "block" : "none";
+        }
+    </script>
 {% endblock %}
