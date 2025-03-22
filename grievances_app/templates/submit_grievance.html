@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "student_base.html" %}
 
 {% block title %}Submit Grievance{% endblock %}
 
@@ -6,36 +6,58 @@
 <div class="container mt-5">
     <h2 class="text-center">Submit a Grievance</h2>
     <p class="text-center text-muted">Fill in the details of your complaint below.</p>
-    
-    <form action="{{ url_for('submit_grievance') }}" method="POST" enctype="multipart/form-data" class="mt-4">
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('submit_grievance') }}" method="POST" enctype="multipart/form-data" class="mt-4 needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- Complaint Title -->
         <div class="mb-3">
             <label for="title" class="form-label">Complaint Title</label>
             <input type="text" class="form-control" id="title" name="title" required>
+            <div class="invalid-feedback">Please provide a title for your complaint.</div>
         </div>
 
         <!-- Complaint Department/Category -->
         <div class="mb-3">
             <label for="category" class="form-label">Department Concerned</label>
             <select class="form-select" id="category" name="category" required>
-                <option value="Academics">Academics</option>
-                <option value="Administration">Administration</option>
-                <option value="Hostel">Hostel</option>
-                <option value="Library">Library</option>
-                <option value="Transport">Transport</option>
+                <option value="" selected disabled>Select a department</option>
+                {% for department in departments %}
+                    <option value="{{ department.dept_name }}">{{ department.dept_name }}</option>
+                {% endfor %}
             </select>
+            <div class="invalid-feedback">Please select a department.</div>
         </div>
 
         <!-- Complaint Description -->
         <div class="mb-3">
             <label for="description" class="form-label">Description of Complaint</label>
             <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+            <div class="invalid-feedback">Please enter a complaint description.</div>
         </div>
 
         <!-- Anonymous Submission Checkbox -->
         <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="anonymous" name="anonymous">
+            <input class="form-check-input" type="checkbox" id="anonymous" name="anonymous" onchange="toggleStudentID()">
             <label class="form-check-label" for="anonymous">Submit anonymously</label>
+        </div>
+
+        <!-- Hidden Student ID Field -->
+        <div id="studentIDField" class="mb-3">
+            <label for="stud_id" class="form-label">Your Student ID</label>
+            <input type="text" class="form-control" id="stud_id" name="stud_id" required>
+            <div class="invalid-feedback">Please enter your Student ID.</div>
         </div>
 
         <!-- File Upload -->
@@ -50,4 +72,37 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Bootstrap form validation
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    // Toggle Student ID field when anonymous checkbox is checked
+    function toggleStudentID() {
+        let anonymousCheckbox = document.getElementById("anonymous");
+        let studentIDField = document.getElementById("studentIDField");
+        let studentIDInput = document.getElementById("stud_id");
+
+        if (anonymousCheckbox.checked) {
+            studentIDField.style.display = "none";
+            studentIDInput.removeAttribute("required");
+            studentIDInput.value = "";
+        } else {
+            studentIDField.style.display = "block";
+            studentIDInput.setAttribute("required", "required");
+        }
+    }
+</script>
 {% endblock %}

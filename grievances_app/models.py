@@ -66,14 +66,14 @@ class Supervisor(db.Model):
 class Complaint(db.Model):
     comp_id = db.Column(db.Integer, primary_key=True)
     comp_datefiled = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    comp_descr = db.Column(db.String(500), nullable=False)
+    comp_descr = db.Column(db.Text, nullable=False)
     comp_status = db.Column(db.String(100), default='Pending')
     comp_dept=db.Column(db.String(200), nullable=False)
     comp_anonymous = db.Column(db.Boolean, default=False)
     comp_dateresolved = db.Column(db.DateTime, nullable=True)
     comp_doc = db.Column(db.String(300), nullable=True)  # Stores filename of uploaded document
     
-    stud_id = db.Column(db.Integer, db.ForeignKey('student.stud_id'), nullable=False)
+    stud_id = db.Column(db.Integer, db.ForeignKey('student.stud_id'), nullable=True)
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.admin_id'), nullable=True)
     superv_id = db.Column(db.Integer, db.ForeignKey('supervisor.superv_id'), nullable=True)
     
