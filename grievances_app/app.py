@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 from models import User, Complaint, Department, Student, Admin, Supervisor, db
 import os
 from werkzeug.utils import secure_filename
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -29,6 +30,7 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return db.session.get(User, int(user_id))  # Fixed SQLAlchemy 2.0 `get()`
 
+#======================================Shared Routes============================================#
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -127,20 +129,124 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
+#====================================================Admin Routes============================================================#
+@app.route('/admin_dashboard')
+@login_required
+def admin_dashboard():
+    return render_template('admin_dashboard.html', user=current_user)
+
+#================================================Supervisor Routes======================================================
+@app.route('/supervisor/dashboard')
+@login_required
+def supervisor_dashboard():
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+
+    # Fetch the latest 5 complaints assigned to the supervisor
+    recent_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).order_by(Complaint.comp_id.desc()).limit(5).all()
+
+    return render_template('supervisor_dashboard.html', recent_complaints=recent_complaints, user=current_user)
+
+
+@app.route('/supervisor/complaints/<int:complaint_id>')
+@login_required
+def supervisor_complaints(comp_id):
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+
+    complaint = Complaint.query.get_or_404(comp_id)
+
+    # Ensure the supervisor only sees complaints assigned to them
+    if complaint.superv_id != current_user.supervisor.superv_id:
+        flash("You do not have access to this complaint.", "danger")
+        return redirect(url_for('supervisor_dashboard'))
+
+    return render_template('view_complaint.html', complaint=complaint)
+
+
+@app.route('/supervisor/complaints/<int:comp_id>/resolve', methods=['GET', 'POST'])
+@login_required
+def resolve_complaint(comp_id):
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+
+    complaint = Complaint.query.get_or_404(comp_id)
+
+    # Ensure the supervisor only updates complaints assigned to them
+    if complaint.superv_id != current_user.supervisor.superv_id:
+        flash("You do not have access to this complaint.", "danger")
+        return redirect(url_for('supervisor_dashboard'))
+
+    if request.method == 'POST':
+        status = request.form['status']
+        resolution = request.form['resolution']
+
+        complaint.comp_status = status
+        complaint.comp_dateresolved = datetime.utcnow()
+        complaint.comp_descr += f"\n\n[Supervisor Resolution]: {resolution}"  # Appending resolution details
+
+        db.session.commit()
+
+        flash("Complaint resolved successfully!", "success")
+        return redirect(url_for('supervisor_dashboard'))
+
+    return render_template('resolve_complaint.html', complaint=complaint)
+
+
+@app.route('/supervisor/complaint_history')
+@login_required
+def complaint_history():
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+
+    # Fetch all past complaints the supervisor has handled
+    complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).all()
+
+    return render_template('complaint_history.html', complaints=complaints)
+
+
+@app.route('/supervisor/performance_analytics')
+@login_required
+def performance_analytics():
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+    
+    # Ensure supervisor entry exists
+    supervisor = current_user.supervisor
+    if not supervisor:
+        flash("Supervisor record not found.", "danger")
+        return redirect(url_for('login'))
+
+    # Fetch complaint stats
+    total_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).count()
+    resolved_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id, comp_status="Resolved").count()
+    unresolved_complaints = total_complaints - resolved_complaints
+
+    # Dummy months data (Replace this with actual data from your database)
+    #months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul","Aug","Sep","Oct","Nov","Dec"]  
+
+    return render_template('performance_analytics.html', 
+                           total_complaints=total_complaints, 
+                           resolved_complaints=resolved_complaints, 
+                           unresolved_complaints=unresolved_complaints)
+
+"""
+@app.route('/supervisor_dashboard')
+@login_required
+def supervisor_dashboard():
+    return render_template('supervisor_dashboard.html', user=current_user)
+"""
+#============================================Student Routes===================================================#
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
     return render_template('student_dashboard.html', user=current_user)
 
-@app.route('/admin_dashboard')
-@login_required
-def admin_dashboard():
-    return render_template('admin_dashboard.html')
-
-@app.route('/supervisor_dashboard')
-@login_required
-def supervisor_dashboard():
-    return render_template('supervisor_dashboard.html')
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'docx'}

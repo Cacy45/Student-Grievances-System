@@ -1,0 +1,96 @@
+{% extends 'supervisor_base.html' %}
+
+{% block title %}Performance Analytics{% endblock %}
+
+{% block head %}
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .chart-container {
+        width: 100%;
+        max-width: 600px;
+        margin: auto;
+    }
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: #ecf0f1;
+        padding: 15px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Performance Analytics</h2>
+
+    <!-- Overview Cards -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card dashboard-card text-center p-3">
+                <h5>Total Complaints Handled</h5>
+                <h2>{{ total_complaints }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card dashboard-card text-center p-3">
+                <h5>Resolved Complaints</h5>
+                <h2>{{ resolved_complaints }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card dashboard-card text-center p-3">
+                <h5>Pending Complaints</h5>
+                <h2>{{ pending_complaints }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaints Resolution Rate Chart -->
+    <div class="chart-container mt-4">
+        <canvas id="resolutionRateChart"></canvas>
+    </div>
+
+    <!-- Monthly Complaints Handled Chart -->
+    <div class="chart-container mt-4">
+        <canvas id="monthlyComplaintsChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // Complaints Resolution Rate Pie Chart
+    var ctx1 = document.getElementById("resolutionRateChart").getContext("2d");
+    new Chart(ctx1, {
+        type: "doughnut",
+        data: {
+            labels: ["Resolved", "Pending"],
+            datasets: [{
+                data: [{{ resolved_complaints }}, {{ pending_complaints }}],
+                backgroundColor: ["#2ecc71", "#e74c3c"]
+            }]
+        }
+    });
+
+    // Monthly Complaints Handled Bar Chart
+    var ctx2 = document.getElementById("monthlyComplaintsChart").getContext("2d");
+    new Chart(ctx2, {
+        type: "bar",
+        data: {
+            labels: {{ months | tojson }},
+            datasets: [{
+                label: "Complaints Handled",
+                data: {{ complaints_per_month | tojson }},
+                backgroundColor: "#3498db"
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

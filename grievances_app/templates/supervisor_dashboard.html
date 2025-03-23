@@ -1,0 +1,44 @@
+{% extends 'supervisor_base.html' %}
+
+{% block title %}Supervisor Dashboard{% endblock %}
+
+{% block head %}
+<style>
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: #ecf0f1;
+        padding: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card dashboard-card p-3">
+                <h5>Welcome, {{ user.fname }}</h5>
+                <p>Email: {{ user.email }}</p>
+                <p>Phone: {{ user.phone }}</p>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card dashboard-card p-3">
+                <h5>Recent Complaints</h5>
+                <ul class="list-group">
+                    {% for complaint in recent_complaints %}
+                        <li class="list-group-item">
+                            {{ complaint.comp_descr[:50] }}... - <strong>{{ complaint.comp_status }}</strong>
+                            <a href="{{ url_for('supervisor_complaints', comp_id=complaint.comp_id) }}" class="btn btn-sm btn-primary float-end">View</a>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-center">No recent complaints.</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('supervisor_dashboard') }}" class="btn btn-primary mt-3">View All Complaints</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

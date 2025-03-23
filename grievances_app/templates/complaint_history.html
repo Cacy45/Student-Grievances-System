@@ -1,0 +1,29 @@
+{% extends 'supervisor_base.html' %}
+
+{% block title %}Complaint History{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Complaint History</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Resolved Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for complaint in complaints %}
+            <tr>
+                <td>{{ complaint.comp_id }}</td>
+                <td>{{ complaint.comp_descr }}</td>
+                <td>{{ complaint.comp_status }}</td>
+                <td>{{ complaint.comp_dateresolved }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
