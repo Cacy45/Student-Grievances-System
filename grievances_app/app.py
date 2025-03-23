@@ -4,10 +4,11 @@ from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
-from models import User, Complaint, Department, Student, Admin, Supervisor, db
+from models import User, Complaint, Department, Student, Admin, Supervisor, Appeal, db
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from sqlalchemy import func
 
 app = Flask(__name__)
 
@@ -103,6 +104,7 @@ def login():
 
         if user and user.check_password(password):  
             login_user(user)
+            print(f"User {user.email} logged in as {user.role}")  # Debugging
             flash('Login successful!', 'success')
 
             if user.role == 'student':
@@ -133,7 +135,125 @@ def logout():
 @app.route('/admin_dashboard')
 @login_required
 def admin_dashboard():
-    return render_template('admin_dashboard.html', user=current_user)
+    """
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    """
+    total_complaints = Complaint.query.count()
+    resolved_complaints = Complaint.query.filter_by(comp_status='Resolved').count()
+    pending_complaints = Complaint.query.filter_by(comp_status='Pending').count()
+    
+    return render_template('admin_dashboard.html', 
+                           total_complaints=total_complaints,
+                           resolved_complaints=resolved_complaints,
+                           pending_complaints=pending_complaints)
+
+@app.route('/admin/manage_complaints')
+@login_required
+def manage_complaints():
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    complaints = Complaint.query.all()
+    return render_template('manage_complaints.html', complaints=complaints)
+
+@app.route('/admin/complaint/update/<int:comp_id>', methods=['GET', 'POST'])
+@login_required
+def update_complaint(comp_id):
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    complaint = Complaint.query.get_or_404(comp_id)
+
+    if request.method == 'POST':
+        # Update complaint status
+        complaint.comp_status = request.form['status']
+        db.session.commit()
+        flash("Complaint updated successfully.", "success")
+        return redirect(url_for('manage_complaints'))
+
+    # If GET request, render the update form with the complaint details
+    return render_template('update_complaint.html', complaint=complaint)
+
+
+@app.route('/admin/complaint/delete/<int:comp_id>', methods=['GET', 'POST'])
+@login_required
+def delete_complaint(comp_id):
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    complaint = Complaint.query.get_or_404(comp_id)
+
+    if request.method == 'POST':
+        # Delete complaint
+        db.session.delete(complaint)
+        db.session.commit()
+        flash("Complaint deleted successfully.", "success")
+        return redirect(url_for('manage_complaints'))
+
+    # If GET request, render a confirmation page
+    return render_template('confirm_delete.html', complaint=complaint)
+
+
+@app.route('/admin/transfer_complaints')
+@login_required
+def transfer_complaints():
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    complaints = Complaint.query.filter_by(comp_status='Pending').all()
+    supervisors = Supervisor.query.filter_by(dept_id=current_user.admin.dept_id).all()
+    return render_template('transfer_complaints.html', complaints=complaints, supervisors=supervisors)
+
+@app.route('/admin/complaint/transfer/<int:comp_id>', methods=['POST'])
+@login_required
+def transfer_complaint(comp_id):
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    complaint = Complaint.query.get_or_404(comp_id)
+    supervisor_id = request.form['supervisor_id']
+    complaint.superv_id = supervisor_id
+    complaint.comp_status = 'Transferred'
+    db.session.commit()
+    flash("Complaint transferred successfully.", "success")
+    return redirect(url_for('transfer_complaints'))
+
+@app.route('/admin/manage_appeals')
+@login_required
+def manage_appeals():
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    appeals = Appeal.query.all()
+    return render_template('manage_appeals.html', appeals=appeals)
+
+@app.route('/admin/profile', methods=['GET', 'POST'])
+@login_required
+def admin_profile():
+    if current_user.role != 'admin':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+    
+    admin = Admin.query.filter_by(user_id=current_user.user_id).first()
+    
+    if request.method == 'POST':
+        current_user.fname = request.form['fname']
+        current_user.lname = request.form['lname']
+        current_user.phone = request.form['phone']
+        db.session.commit()
+        flash("Profile updated successfully.", "success")
+        return redirect(url_for('admin_profile'))
+    
+    return render_template('admin_profile.html', admin=admin)
+
 
 #================================================Supervisor Routes======================================================
 @app.route('/supervisor/dashboard')
@@ -223,17 +343,32 @@ def performance_analytics():
         return redirect(url_for('login'))
 
     # Fetch complaint stats
-    total_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).count()
-    resolved_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id, comp_status="Resolved").count()
+    total_complaints = Complaint.query.filter_by(superv_id=supervisor.superv_id).count()
+    resolved_complaints = Complaint.query.filter_by(superv_id=supervisor.superv_id, comp_status="Resolved").count()
     unresolved_complaints = total_complaints - resolved_complaints
 
-    # Dummy months data (Replace this with actual data from your database)
-    #months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul","Aug","Sep","Oct","Nov","Dec"]  
+    # Fetch monthly complaints data from the database
+    months = []
+    complaints_per_month = []
+
+    results = (
+        db.session.query(func.strftime("%Y-%m", Complaint.comp_datefiled), func.count())
+        .filter(Complaint.superv_id == supervisor.superv_id)
+        .group_by(func.strftime("%Y-%m", Complaint.comp_datefiled))
+        .all()
+    )
+
+    if results:
+        for month, count in results:
+            months.append(month)
+            complaints_per_month.append(count)
 
     return render_template('performance_analytics.html', 
                            total_complaints=total_complaints, 
                            resolved_complaints=resolved_complaints, 
-                           unresolved_complaints=unresolved_complaints)
+                           unresolved_complaints=unresolved_complaints,
+                           months=months or [],  # Ensure it's always defined
+                           complaints_per_month=complaints_per_month or [])  # Ensure it's always defined
 
 """
 @app.route('/supervisor_dashboard')

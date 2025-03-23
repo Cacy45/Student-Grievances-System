@@ -1,39 +1,53 @@
 {% extends 'admin_base.html' %}
 
-{% block title %}Admin Dashboard{% endblock %}
-
 {% block content %}
-<div class="container">
-    <h2 class="my-4">Welcome, Admin</h2>
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+
+    <!-- Logged-in User Details -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Welcome, {{ current_user.fname }} </h5>
+            <p><strong>Name:</strong> {{ current_user.fname }} {{ current_user.lname }}</p>
+            <p><strong>Email:</strong> {{ current_user.email }}</p>
+            <p><strong>Role:</strong> {{ current_user.role.capitalize() }}</p>
+
+            <!-- Display department -->
+            {% if current_user.role == 'admin' %}
+                <p><strong>Department:</strong> {{ current_user.admin.department.dept_name }}</p>
+            {% elif current_user.role == 'supervisor' %}
+                <p><strong>Department:</strong> {{ current_user.supervisor.department.dept_name }}</p>
+            {% else %}
+                <p><strong>Department:</strong> N/A</p>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-4">
             <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Total Users</h5>
-                    <p class="card-text display-6">{{ total_users }}</p>
+                    <h5 class="card-title">Total Complaints</h5>
+                    <p class="card-text">{{ total_complaints }}</p>
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card text-white bg-success mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Total Complaints</h5>
-                    <p class="card-text display-6">{{ total_complaints }}</p>
+                    <h5 class="card-title">Resolved Complaints</h5>
+                    <p class="card-text">{{ resolved_complaints }}</p>
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card text-white bg-warning mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Pending Complaints</h5>
-                    <p class="card-text display-6">{{ pending_complaints }}</p>
+                    <p class="card-text">{{ pending_complaints }}</p>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}

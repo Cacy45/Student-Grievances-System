@@ -1,0 +1,18 @@
+<!-- transfer_complaint.html -->
+{% extends 'admin_base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Transfer Complaint</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="supervisor">Select Supervisor</label>
+            <select name="supervisor_id" class="form-control">
+                {% for supervisor in supervisors %}
+                <option value="{{ supervisor.superv_id }}">{{ supervisor.user.fname }} {{ supervisor.user.lname }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Transfer</button>
+    </form>
+</div>
+{% endblock %}

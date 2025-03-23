@@ -1,0 +1,21 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Admin Profile</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="fname">First Name</label>
+            <input type="text" class="form-control" name="fname" value="{{ admin.user.fname }}">
+        </div>
+        <div class="form-group">
+            <label for="lname">Last Name</label>
+            <input type="text" class="form-control" name="lname" value="{{ admin.user.lname }}">
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" name="email" value="{{ admin.user.email }}" readonly>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Update Profile</button>
+    </form>
+</div>
+{% endblock %}
