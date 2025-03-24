@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -156,29 +156,67 @@ def manage_complaints():
         flash("Unauthorized access.", "danger")
         return redirect(url_for('home'))
     
-    complaints = Complaint.query.all()
-    return render_template('manage_complaints.html', complaints=complaints)
+    # Ensure the current user has an associated admin record
+    admin = Admin.query.filter_by(user_id=current_user.user_id).first()
+    if not admin:
+        flash("Admin record not found.", "danger")
+        return redirect(url_for('home'))
 
-@app.route('/admin/complaint/update/<int:comp_id>', methods=['GET', 'POST'])
+    # Get filter values from the request
+    status_filter = request.args.get('status', default="All", type=str)
+    search_query = request.args.get('search', default="", type=str)
+
+    # Fetch complaints related to the admin's department
+    complaints = Complaint.query.filter_by(comp_dept=admin.department.dept_name)
+
+    # Apply status filter if not "All"
+    if status_filter and status_filter != "All":
+        complaints = complaints.filter(Complaint.comp_status == status_filter)
+
+    # Apply search query filter
+    if search_query:
+        complaints = complaints.filter(Complaint.comp_descr.ilike(f"%{search_query}%"))
+
+    complaints = complaints.order_by(Complaint.comp_datefiled.desc()).all()
+
+    # ✅ Fetch supervisors belonging to the admin's department
+    supervisors = Supervisor.query.filter_by(dept_id=admin.dept_id).all()
+
+    return render_template(
+        'manage_complaints.html',
+        complaints=complaints,
+        selected_status=status_filter,
+        search_query=search_query,
+        supervisors=supervisors  # Pass supervisors to the template
+    )
+
+
+
+@app.route('/admin/complaint/update/<int:comp_id>', methods=['POST'])
 @login_required
 def update_complaint(comp_id):
     if current_user.role != 'admin':
-        flash("Unauthorized access.", "danger")
-        return redirect(url_for('home'))
+        return jsonify({"success": False, "message": "Unauthorized access"}), 403
     
     complaint = Complaint.query.get_or_404(comp_id)
 
-    if request.method == 'POST':
-        # Update complaint status
+    if request.is_json:  # Handle AJAX Request
+        data = request.get_json()
+        if 'status' in data:
+            complaint.comp_status = data['status']
+            db.session.commit()
+            return jsonify({"success": True, "new_status": complaint.comp_status})
+
+        return jsonify({"success": False, "message": "Invalid request"}), 400
+
+    else:  # Handle Traditional Form Submission
         complaint.comp_status = request.form['status']
         db.session.commit()
         flash("Complaint updated successfully.", "success")
         return redirect(url_for('manage_complaints'))
 
-    # If GET request, render the update form with the complaint details
-    return render_template('update_complaint.html', complaint=complaint)
 
-
+"""
 @app.route('/admin/complaint/delete/<int:comp_id>', methods=['GET', 'POST'])
 @login_required
 def delete_complaint(comp_id):
@@ -197,6 +235,7 @@ def delete_complaint(comp_id):
 
     # If GET request, render a confirmation page
     return render_template('confirm_delete.html', complaint=complaint)
+    
 
 
 @app.route('/admin/transfer_complaints')
@@ -209,6 +248,8 @@ def transfer_complaints():
     complaints = Complaint.query.filter_by(comp_status='Pending').all()
     supervisors = Supervisor.query.filter_by(dept_id=current_user.admin.dept_id).all()
     return render_template('transfer_complaints.html', complaints=complaints, supervisors=supervisors)
+"""
+
 
 @app.route('/admin/complaint/transfer/<int:comp_id>', methods=['POST'])
 @login_required
@@ -218,12 +259,23 @@ def transfer_complaint(comp_id):
         return redirect(url_for('home'))
     
     complaint = Complaint.query.get_or_404(comp_id)
-    supervisor_id = request.form['supervisor_id']
-    complaint.superv_id = supervisor_id
+
+    # Get supervisor ID from form data
+    supervisor_id = request.form.get('superv_id')
+
+    if not supervisor_id:
+        flash("Please select a supervisor.", "warning")
+        return redirect(url_for('manage_complaints'))
+
+    # Assign complaint to supervisor & update status
+    complaint.superv_id = int(supervisor_id)
     complaint.comp_status = 'Transferred'
+    
     db.session.commit()
+    
     flash("Complaint transferred successfully.", "success")
-    return redirect(url_for('transfer_complaints'))
+    return redirect(url_for('manage_complaints'))  
+
 
 @app.route('/admin/manage_appeals')
 @login_required
