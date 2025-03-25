@@ -50,7 +50,7 @@ def register():
         role = request.form['role']
         dept_id = request.form.get('dept_id')
 
-        print(f"Role selected: {role}")  # ✅ Debugging Role
+        print(f"Role selected: {role}")  #Debugging Role
         print(f"Selected department: {dept_id}")
 
         if password != confirm_password:
@@ -179,7 +179,7 @@ def manage_complaints():
 
     complaints = complaints.order_by(Complaint.comp_datefiled.desc()).all()
 
-    # ✅ Fetch supervisors belonging to the admin's department
+    #Fetch supervisors belonging to the admin's department
     supervisors = Supervisor.query.filter_by(dept_id=admin.dept_id).all()
 
     return render_template(
@@ -251,30 +251,47 @@ def transfer_complaints():
 """
 
 
-@app.route('/admin/complaint/transfer/<int:comp_id>', methods=['POST'])
+@app.route('/admin/complaint/transfer/<int:comp_id>', methods=['GET', 'POST'])
 @login_required
 def transfer_complaint(comp_id):
     if current_user.role != 'admin':
         flash("Unauthorized access.", "danger")
         return redirect(url_for('home'))
-    
+
     complaint = Complaint.query.get_or_404(comp_id)
 
-    # Get supervisor ID from form data
-    supervisor_id = request.form.get('superv_id')
+    # Fetch the supervisors from the same department as the complaint's department
+    supervisors = Supervisor.query.filter_by(dept_id=complaint.comp_dept).all()
 
-    if not supervisor_id:
-        flash("Please select a supervisor.", "warning")
-        return redirect(url_for('manage_complaints'))
+    if request.method == 'POST':
+        supervisor_id = request.form.get('supervisor_id')
+        
+        if not supervisor_id:
+            flash("Please select a supervisor.", "warning")
+            return redirect(url_for('transfer_complaint', comp_id=comp_id))
 
-    # Assign complaint to supervisor & update status
-    complaint.superv_id = int(supervisor_id)
-    complaint.comp_status = 'Transferred'
-    
-    db.session.commit()
-    
-    flash("Complaint transferred successfully.", "success")
-    return redirect(url_for('manage_complaints'))  
+        # Fetch supervisor
+        supervisor = Supervisor.query.get(int(supervisor_id))  # Make sure it's an integer
+
+        if not supervisor:
+            flash("Invalid supervisor selection.", "danger")
+            return redirect(url_for('transfer_complaint', comp_id=comp_id))
+
+        # Update complaint with the supervisor's ID
+        complaint.superv_id = supervisor.superv_id
+        complaint.comp_status = 'Transferred'
+
+        try:
+            db.session.commit()
+            flash("Complaint transferred successfully.", "success")
+            return redirect(url_for('manage_complaints'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {e}", "danger")
+
+    return render_template('transfer_complaint.html', complaint=complaint, supervisors=supervisors)
+
+
 
 
 @app.route('/admin/manage_appeals')
@@ -321,6 +338,67 @@ def supervisor_dashboard():
     return render_template('supervisor_dashboard.html', recent_complaints=recent_complaints, user=current_user)
 
 
+@app.route('/supervisor/manage_complaints')
+@login_required
+def supervisor_manage_complaints():
+    if current_user.role != 'supervisor':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+
+    # Ensure the current user has an associated supervisor record
+    supervisor = Supervisor.query.filter_by(user_id=current_user.user_id).first()
+    if not supervisor:
+        flash("Supervisor record not found.", "danger")
+        return redirect(url_for('home'))
+
+    # Get filter values from the request
+    status_filter = request.args.get('status', default="All", type=str)
+    search_query = request.args.get('search', default="", type=str)
+
+    # Fetch complaints assigned to this supervisor
+    complaints = Complaint.query.filter_by(superv_id=supervisor.superv_id)
+
+    # Apply status filter if not "All"
+    if status_filter and status_filter != "All":
+        complaints = complaints.filter(Complaint.comp_status == status_filter)
+
+    # Apply search query filter
+    if search_query:
+        complaints = complaints.filter(Complaint.comp_descr.ilike(f"%{search_query}%"))
+
+    complaints = complaints.order_by(Complaint.comp_datefiled.desc()).all()
+
+    return render_template('supervisor_manage_complaints.html', complaints=complaints, selected_status=status_filter, search_query=search_query)
+
+
+@app.route('/supervisor/complaint/update/<int:comp_id>', methods=['POST'])
+@login_required
+def update_complaint_status(comp_id):
+    if current_user.role != 'supervisor':
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('home'))
+
+    complaint = Complaint.query.get_or_404(comp_id)
+
+    # Ensure that the complaint belongs to the supervisor
+    if complaint.superv_id != current_user.supervisor.superv_id:
+        flash("Unauthorized access to complaint.", "danger")
+        return redirect(url_for('supervisor_manage_complaints'))
+
+    new_status = request.form.get('status')
+    if new_status:
+        complaint.comp_status = new_status
+
+        # If resolved, set the resolution date
+        if new_status == "Resolved":
+            complaint.comp_dateresolved = datetime.utcnow()
+
+        db.session.commit()
+        flash("Complaint status updated successfully.", "success")
+
+    return redirect(url_for('supervisor_manage_complaints'))
+
+#Cacilda- Remove this route
 @app.route('/supervisor/complaints/<int:complaint_id>')
 @login_required
 def supervisor_complaints(comp_id):
@@ -457,6 +535,7 @@ def submit_grievance():
             filename = secure_filename(attachment.filename)
             attachment.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
+        # Create the new complaint object (not assigned yet to an admin)
         new_complaint = Complaint(
             comp_descr=description,
             comp_dept=category,
@@ -464,6 +543,19 @@ def submit_grievance():
             comp_doc=filename,
             stud_id=int(student_id) if student_id else None,
         )
+
+        # Fetch the department object based on the selected category
+        department = Department.query.filter_by(dept_name=category).first()
+
+        if department:
+            # Find the least-loaded admin in this department
+            admin = get_least_loaded_admin(department)
+
+            if admin:
+                # Assign the least-loaded admin to the complaint
+                new_complaint.admin_id = admin.admin_id
+
+        # Add the complaint to the session and commit it
         db.session.add(new_complaint)
         db.session.commit()
 
@@ -472,6 +564,27 @@ def submit_grievance():
 
     departments = Department.query.all()
     return render_template("submit_grievance.html", departments=departments)
+
+
+def get_least_loaded_admin(department):
+    """
+    This function returns the admin with the least number of complaints assigned in the given department.
+    """
+    # Get all admins from the selected department
+    admins = Admin.query.filter_by(dept_id=department.dept_id).all()
+
+    least_loaded_admin = None
+    least_complaints_count = float('inf')  # Start with an infinite number of complaints
+
+    # Loop through each admin to find the one with the least number of complaints
+    for admin in admins:
+        num_complaints = len(admin.complaints)  # Get the number of complaints assigned to this admin
+        if num_complaints < least_complaints_count:
+            least_complaints_count = num_complaints
+            least_loaded_admin = admin
+
+    return least_loaded_admin
+
 
 @app.route('/view_grievances')
 @login_required

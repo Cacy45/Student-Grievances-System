@@ -49,9 +49,7 @@
                             {% elif complaint.comp_status == 'In Progress' %} bg-primary 
                             {% elif complaint.comp_status == 'Resolved' %} bg-success 
                             {% elif complaint.comp_status == 'Rejected' %} bg-danger 
-                            {% endif %}">
-                            {{ complaint.comp_status }}
-                        </span>
+                            {% endif %}">{{ complaint.comp_status }}</span>
                     </td>
 
                     {% if complaint.comp_anonymous %}
@@ -78,13 +76,14 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Update Complaint Status</h5>
+                <h5 class="modal-title">Update Complaint Status</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="updateStatusForm" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label for="statusSelect" class="form-label">Select Status</label>
+                        <label class="form-label">Select Status</label>
                         <select id="statusSelect" name="status" class="form-select">
                             <option value="New">New</option>
                             <option value="In Progress">In Progress</option>
@@ -100,25 +99,27 @@
 </div>
 
 <!-- Transfer Modal -->
-<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+<div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="transferModalLabel">Transfer Complaint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Transfer Complaint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="transferForm" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label for="supervisorSelect" class="form-label">Select Supervisor</label>
+                        <label class="form-label">Select Supervisor</label>
                         <select id="supervisorSelect" name="supervisor_id" class="form-select">
                             {% for supervisor in supervisors %}
-                                <option value="{{ supervisor.supervisor_id }}">{{ supervisor.user.fname }} {{ supervisor.user.lname }}</option>
+                                <option value="{{ supervisor.superv_id }}">{{ supervisor.user.fname }} {{ supervisor.user.lname }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Transfer</button>
                 </form>
+                
             </div>
         </div>
     </div>
@@ -148,15 +149,12 @@ function applyFilters() {
 function openEditModal(compId, currentStatus) {
     document.getElementById("statusSelect").value = currentStatus;
     document.getElementById("updateStatusForm").action = `/admin/complaint/update/${compId}`;
-    var editModal = new bootstrap.Modal(document.getElementById('editModal'));
-    editModal.show();
+    new bootstrap.Modal(document.getElementById('editModal')).show();
 }
 
 function openTransferModal(compId) {
     document.getElementById("transferForm").action = `/admin/complaint/transfer/${compId}`;
-    var transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
-    transferModal.show();
+    new bootstrap.Modal(document.getElementById('transferModal')).show();
 }
 </script>
-
 {% endblock %}
