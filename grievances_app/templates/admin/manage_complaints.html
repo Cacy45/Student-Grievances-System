@@ -45,11 +45,13 @@
                     <td class="text-start">{{ complaint.comp_descr }}</td>
                     <td>
                         <span class="badge 
-                            {% if complaint.comp_status == 'New' %} bg-info 
-                            {% elif complaint.comp_status == 'In Progress' %} bg-primary 
-                            {% elif complaint.comp_status == 'Resolved' %} bg-success 
-                            {% elif complaint.comp_status == 'Rejected' %} bg-danger 
-                            {% endif %}">{{ complaint.comp_status }}</span>
+                            {% if complaint.comp_status == 'New' %} bg-info text-dark 
+                            {% elif complaint.comp_status == 'In Progress' %} bg-primary text-white 
+                            {% elif complaint.comp_status == 'Resolved' %} bg-success text-white 
+                            {% elif complaint.comp_status == 'Rejected' %} bg-danger text-white 
+                            {% endif %}">
+                            {{ complaint.comp_status }}
+                        </span>
                     </td>
 
                     {% if complaint.comp_anonymous %}
@@ -61,8 +63,8 @@
                     {% endif %}
 
                     <td class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-warning btn-sm" onclick="openEditModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')">Edit</button>
-                        <button class="btn btn-primary btn-sm" onclick="openTransferModal({{ complaint.comp_id }})">Transfer</button>
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')" {% if complaint.superv_id %}disabled{% endif %}>Edit</button>
+                        <button class="btn btn-primary btn-sm" onclick="openTransferModal({{ complaint.comp_id }})" {% if complaint.superv_id %}disabled{% endif %}>Transfer</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -81,7 +83,7 @@
             </div>
             <div class="modal-body">
                 <form id="updateStatusForm" method="POST">
-                    
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Select Status</label>
                         <select id="statusSelect" name="status" class="form-select">
@@ -119,7 +121,6 @@
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Transfer</button>
                 </form>
-                
             </div>
         </div>
     </div>
@@ -130,7 +131,7 @@ function applyFilters() {
     var status = document.getElementById("statusFilter").value;
     var search = document.getElementById("searchInput").value.trim();
     var url = new URL(window.location.href);
-    
+
     if (status !== "All") {
         url.searchParams.set("status", status);
     } else {

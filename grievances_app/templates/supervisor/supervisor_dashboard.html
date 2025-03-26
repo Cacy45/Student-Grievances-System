@@ -30,7 +30,7 @@
                     {% for complaint in recent_complaints %}
                         <li class="list-group-item">
                             {{ complaint.comp_descr[:50] }}... - <strong>{{ complaint.comp_status }}</strong>
-                            <a href="{{ url_for('supervisor_complaints', complaint_id=complaint.comp_id) }}" class="btn btn-sm btn-primary float-end">View</a>
+                            <a href="{{ url_for('supervisor_manage_complaints', complaint_id=complaint.comp_id) }}" class="btn btn-sm btn-primary float-end">View</a>
                         </li>
                     {% else %}
                         <li class="list-group-item text-center">No recent complaints.</li>

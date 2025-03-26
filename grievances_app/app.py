@@ -381,10 +381,12 @@ def view_complaint_details(student_id, complaint_id):
 @app.route('/supervisor/complaint/update/<int:comp_id>', methods=['POST'])
 @login_required
 def update_complaint_status(comp_id):
+    # Check if the logged-in user is a supervisor
     if current_user.role != 'supervisor':
         flash("Unauthorized access.", "danger")
         return redirect(url_for('home'))
 
+    # Retrieve the complaint by its ID
     complaint = Complaint.query.get_or_404(comp_id)
 
     # Ensure that the complaint belongs to the supervisor
@@ -392,24 +394,30 @@ def update_complaint_status(comp_id):
         flash("Unauthorized access to complaint.", "danger")
         return redirect(url_for('supervisor_manage_complaints'))
 
-    new_status = request.form.get('comp_status')  # Adjusted to match form field name
+    # Get the new status from the form
+    new_status = request.form.get('comp_status')
+
+    # If a new status is provided
     if new_status:
-        # Validate the status
-        if new_status not in ['Pending', 'Resolved']:  # Add any other valid statuses if needed
+        # Validate the status against a list of acceptable values
+        if new_status not in ['New', 'Pending', 'Resolved', 'Rejected']:  # Include 'New' and 'Rejected' in valid statuses
             flash("Invalid status.", "danger")
             return redirect(url_for('supervisor_manage_complaints'))
 
+        # Update the complaint status
         complaint.comp_status = new_status
 
-        # If resolved, set the resolution date
-        if new_status == "Resolved":
+        # If the status is 'Resolved', set the resolution date to the current time
+        if new_status == 'Resolved':
             complaint.comp_dateresolved = datetime.utcnow()
 
+        # Commit the changes to the database
         db.session.commit()
         flash("Complaint status updated successfully.", "success")
     else:
         flash("Please select a valid status.", "danger")
 
+    # Redirect back to the supervisor's complaint management page
     return redirect(url_for('supervisor_manage_complaints'))
 
 

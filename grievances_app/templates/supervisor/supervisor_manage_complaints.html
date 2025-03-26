@@ -17,6 +17,7 @@
                 <form method="GET">
                     <select name="status" class="form-select d-inline w-auto" onchange="this.form.submit()">
                         <option value="All" {% if selected_status=='All' %}selected{% endif %}>All</option>
+                        <option value="New" {% if selected_status=='New' %}selected{% endif %}>New</option>
                         <option value="Pending" {% if selected_status=='Pending' %}selected{% endif %}>Pending</option>
                         <option value="Resolved" {% if selected_status=='Resolved' %}selected{% endif %}>Resolved</option>
                     </select>
@@ -33,7 +34,7 @@
                 <th>Document</th>
                 <th>Status</th>
                 <th>Transferred By</th>
-                <th>Student Details</th> <!-- Added column for student details -->
+                <th>Student Details</th>
                 <th>Resolved Date</th>
                 <th>Action</th>
             </tr>
@@ -50,7 +51,15 @@
                         No document
                     {% endif %}
                 </td>
-                <td>{{ complaint.comp_status }}</td>
+                <td>
+                    <span class="badge {% if complaint.comp_status == 'Resolved' %}bg-success
+                        {% elif complaint.comp_status == 'Rejected' %}bg-danger
+                        {% elif complaint.comp_status == 'Pending' %}bg-warning
+                        {% elif complaint.comp_status == 'New' %}bg-primary
+                        {% else %}bg-secondary{% endif %}">
+                        {{ complaint.comp_status }}
+                    </span>
+                </td>
                 <td>{{ complaint.admin.user.fname }} {{ complaint.admin.user.lname }}</td>
                 <td> 
                     {% if complaint.student %}
@@ -67,7 +76,10 @@
                     {% endif %}
                 </td>
                 <td>
-                    <button class="btn btn-success btn-sm" onclick="openStatusModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')">Update</button>
+                    <!-- Update Status Button: Always Visible -->
+                    <button class="btn btn-success btn-sm" onclick="openStatusModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')">
+                        Update Status
+                    </button>
                 </td>
             </tr>
             {% endfor %}
@@ -90,8 +102,10 @@
                     <div class="mb-3">
                         <label for="statusSelect" class="form-label">Select Status</label>
                         <select id="statusSelect" name="comp_status" class="form-select" required>
+                            <option value="New">New</option>
                             <option value="Pending">Pending</option>
                             <option value="Resolved">Resolved</option>
+                            <option value="Rejected">Rejected</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Save Changes</button>
@@ -101,6 +115,7 @@
     </div>
 </div>
 
+<!-- JavaScript for Modal Handling -->
 <script>
 function openStatusModal(compId, currentStatus) {
     document.getElementById("statusForm").action = `/supervisor/complaint/update/${compId}`;
