@@ -152,7 +152,7 @@ def admin_dashboard():
     resolved_complaints = Complaint.query.filter_by(comp_status='Resolved').count()
     pending_complaints = Complaint.query.filter_by(comp_status='Pending').count()
     
-    return render_template('admin_dashboard.html', 
+    return render_template('admin/admin_dashboard.html', 
                            total_complaints=total_complaints,
                            resolved_complaints=resolved_complaints,
                            pending_complaints=pending_complaints)
@@ -174,8 +174,11 @@ def manage_complaints():
     status_filter = request.args.get('status', default="All", type=str)
     search_query = request.args.get('search', default="", type=str)
 
-    # Fetch complaints related to the admin's department
-    complaints = Complaint.query.filter_by(comp_dept=admin.department.dept_name)
+    # Fetch complaints assigned to the current admin
+    complaints = Complaint.query.filter_by(admin_id=admin.admin_id)
+
+    # Apply department filter to only show complaints from the admin's department
+    complaints = complaints.filter_by(comp_dept=admin.department.dept_name)
 
     # Apply status filter if not "All"
     if status_filter and status_filter != "All":
@@ -187,11 +190,11 @@ def manage_complaints():
 
     complaints = complaints.order_by(Complaint.comp_datefiled.desc()).all()
 
-    #Fetch supervisors belonging to the admin's department
+    # Fetch supervisors belonging to the admin's department
     supervisors = Supervisor.query.filter_by(dept_id=admin.dept_id).all()
 
     return render_template(
-        'manage_complaints.html',
+        'admin/manage_complaints.html',
         complaints=complaints,
         selected_status=status_filter,
         search_query=search_query,
@@ -208,6 +211,10 @@ def update_complaint(comp_id):
     
     complaint = Complaint.query.get_or_404(comp_id)
 
+    # Prevent status update if the complaint is transferred to a supervisor
+    if complaint.superv_id:
+        return jsonify({"success": False, "message": "You cannot update the status of a complaint that has been transferred to a supervisor."}), 403
+
     if request.is_json:  # Handle AJAX Request
         data = request.get_json()
         if 'status' in data:
@@ -222,8 +229,9 @@ def update_complaint(comp_id):
         db.session.commit()
         flash("Complaint updated successfully.", "success")
         return redirect(url_for('manage_complaints'))
-    
 
+    
+#Where's the html for this route
 @app.route('/admin/complaint/transfer/<int:comp_id>', methods=['GET', 'POST'])
 @login_required
 def transfer_complaint(comp_id):
@@ -233,12 +241,17 @@ def transfer_complaint(comp_id):
 
     complaint = Complaint.query.get_or_404(comp_id)
 
+    # Check if the complaint has already been transferred to a supervisor
+    if complaint.superv_id:
+        flash("This complaint has already been transferred to a supervisor.", "warning")
+        return redirect(url_for('manage_complaints'))
+
     # Fetch the supervisors from the same department as the complaint's department
     supervisors = Supervisor.query.filter_by(dept_id=complaint.comp_dept).all()
 
     if request.method == 'POST':
         supervisor_id = request.form.get('supervisor_id')
-        
+
         if not supervisor_id:
             flash("Please select a supervisor.", "warning")
             return redirect(url_for('transfer_complaint', comp_id=comp_id))
@@ -250,7 +263,7 @@ def transfer_complaint(comp_id):
             flash("Invalid supervisor selection.", "danger")
             return redirect(url_for('transfer_complaint', comp_id=comp_id))
 
-        # Update complaint with the supervisor's ID
+        # Update complaint with the supervisor's ID and change status to "Transferred"
         complaint.superv_id = supervisor.superv_id
         complaint.comp_status = 'Transferred'
 
@@ -265,8 +278,6 @@ def transfer_complaint(comp_id):
     return render_template('transfer_complaint.html', complaint=complaint, supervisors=supervisors)
 
 
-
-
 @app.route('/admin/manage_appeals')
 @login_required
 def manage_appeals():
@@ -275,8 +286,10 @@ def manage_appeals():
         return redirect(url_for('home'))
     
     appeals = Appeal.query.all()
-    return render_template('manage_appeals.html', appeals=appeals)
+    return render_template('admin/manage_appeals.html', appeals=appeals)
 
+
+#Is this route being used?
 @app.route('/admin/profile', methods=['GET', 'POST'])
 @login_required
 def admin_profile():
@@ -294,7 +307,7 @@ def admin_profile():
         flash("Profile updated successfully.", "success")
         return redirect(url_for('admin_profile'))
     
-    return render_template('admin_profile.html', admin=admin)
+    return render_template('admin/admin_profile.html', admin=admin)
 
 
 #================================================Supervisor Routes======================================================
@@ -308,7 +321,7 @@ def supervisor_dashboard():
     # Fetch the latest 5 complaints assigned to the supervisor
     recent_complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).order_by(Complaint.comp_id.desc()).limit(5).all()
 
-    return render_template('supervisor_dashboard.html', recent_complaints=recent_complaints, user=current_user)
+    return render_template('supervisor/supervisor_dashboard.html', recent_complaints=recent_complaints, user=current_user)
 
 
 @app.route('/supervisor/manage_complaints')
@@ -345,7 +358,7 @@ def supervisor_manage_complaints():
     for complaint in complaints:
         complaint.student = Student.query.get(complaint.stud_id)
 
-    return render_template('supervisor_manage_complaints.html', complaints=complaints, selected_status=status_filter, search_query=search_query)
+    return render_template('supervisor/supervisor_manage_complaints.html', complaints=complaints, selected_status=status_filter, search_query=search_query)
 
 
 @app.route('/supervisor/student/<int:student_id>/complaint/<int:complaint_id>')
@@ -360,7 +373,7 @@ def view_complaint_details(student_id, complaint_id):
     # Fetch the complaint related to the student using stud_id and complaint_id
     complaint = Complaint.query.filter_by(stud_id=student.stud_id, comp_id=complaint_id).first_or_404()
 
-    return render_template('complaint_details.html', student=student, complaint=complaint)
+    return render_template('supervisor/complaint_details.html', student=student, complaint=complaint)
 
 
 
@@ -400,24 +413,7 @@ def update_complaint_status(comp_id):
     return redirect(url_for('supervisor_manage_complaints'))
 
 
-#Cacilda- Remove this route
-@app.route('/supervisor/complaints/<int:complaint_id>')
-@login_required
-def supervisor_complaints(comp_id):
-    if current_user.role != "supervisor":
-        flash("Unauthorized access.", "danger")
-        return redirect(url_for('login'))
-
-    complaint = Complaint.query.get_or_404(comp_id)
-
-    # Ensure the supervisor only sees complaints assigned to them
-    if complaint.superv_id != current_user.supervisor.superv_id:
-        flash("You do not have access to this complaint.", "danger")
-        return redirect(url_for('supervisor_dashboard'))
-
-    return render_template('view_complaint.html', complaint=complaint)
-
-
+#Is this route being used, I deleted the html for it
 @app.route('/supervisor/complaints/<int:comp_id>/resolve', methods=['GET', 'POST'])
 @login_required
 def resolve_complaint(comp_id):
@@ -458,7 +454,7 @@ def complaint_history():
     # Fetch all past complaints the supervisor has handled
     complaints = Complaint.query.filter_by(superv_id=current_user.supervisor.superv_id).all()
 
-    return render_template('complaint_history.html', complaints=complaints)
+    return render_template('supervisor/complaint_history.html', complaints=complaints)
 
 
 @app.route('/supervisor/performance_analytics')
@@ -495,7 +491,7 @@ def performance_analytics():
             months.append(month)
             complaints_per_month.append(count)
 
-    return render_template('performance_analytics.html', 
+    return render_template('supervisor/performance_analytics.html', 
                            total_complaints=total_complaints, 
                            resolved_complaints=resolved_complaints, 
                            unresolved_complaints=unresolved_complaints,
@@ -507,7 +503,7 @@ def performance_analytics():
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
-    return render_template('student_dashboard.html', user=current_user)
+    return render_template('student/student_dashboard.html', user=current_user)
 
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -560,7 +556,7 @@ def submit_grievance():
         return redirect(url_for("submit_grievance"))
 
     departments = Department.query.all()
-    return render_template("submit_grievance.html", departments=departments)
+    return render_template("student/submit_grievance.html", departments=departments)
 
 
 def get_least_loaded_admin(department):
@@ -596,8 +592,9 @@ def view_grievances():
         return redirect(url_for('student_dashboard'))
 
     grievances = Complaint.query.filter_by(stud_id=student.stud_id).all()
-    return render_template('view_grievances.html', grievances=grievances)
+    return render_template('student/view_grievances.html', grievances=grievances)
 
+#Is this route being used?
 @app.route('/grievance/<int:comp_id>')
 @login_required
 def view_grievance_detail(comp_id):
