@@ -40,11 +40,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('supervisor_dashboard') }}">Dashboard</a>
                     </li>
-                    {% if complaint %}
-                     <li class="nav-item">
-                     <a class="nav-link" href="{{ url_for('view_complaint', complaint_id=complaint.comp_id) }}">View Details</a>
-                     </li>
-                    {% endif %}
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('supervisor_manage_complaints') }}">Manage Complaints</a>
                     </li>

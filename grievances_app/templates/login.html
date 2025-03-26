@@ -8,17 +8,35 @@
 <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow-lg rounded" style="width: 100%; max-width: 400px;">
         <h2 class="text-center text-primary">Login</h2>
-        <form method="POST">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" id="loginForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
                 <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+                <div class="invalid-feedback">Please enter a valid email.</div>
             </div>
 
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required minlength="6">
+                    <button type="button" class="btn btn-outline-secondary" id="togglePassword" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye-slash"></i> <!-- Eye icon (closed) -->
+                    </button>
+                </div>
+                <div class="invalid-feedback">Password must be at least 6 characters long.</div>
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Login</button>
@@ -29,4 +47,57 @@
         </p>
     </div>
 </div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        let isValid = true;
+        let emailInput = document.getElementById('email');
+        let passwordInput = document.getElementById('password');
+
+        // Email validation (check if it's a valid format)
+        let emailValue = emailInput.value.trim();
+        let emailRegex = /^[a-zA-Z0-9._%+-]+@dut4life\.ac\.za$/;
+
+        if (!emailRegex.test(emailValue)) {
+            emailInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            emailInput.classList.remove('is-invalid');
+        }
+
+        // Password validation (minimum length check)
+        let passwordValue = passwordInput.value.trim();
+        if (passwordValue.length < 6) {
+            passwordInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            passwordInput.classList.remove('is-invalid');
+        }
+
+        // If the form is invalid, prevent submission
+        if (!isValid) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        // Add validation styles
+        this.classList.add('was-validated');
+    });
+
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        let passwordInput = document.getElementById('password');
+        let icon = this.querySelector('i');
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        } else {
+            passwordInput.type = "password";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        }
+    });
+</script>
+
 {% endblock %}

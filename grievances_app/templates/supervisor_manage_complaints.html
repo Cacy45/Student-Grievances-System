@@ -33,6 +33,7 @@
                 <th>Document</th>
                 <th>Status</th>
                 <th>Transferred By</th>
+                <th>Student Details</th> <!-- Added column for student details -->
                 <th>Resolved Date</th>
                 <th>Action</th>
             </tr>
@@ -51,6 +52,13 @@
                 </td>
                 <td>{{ complaint.comp_status }}</td>
                 <td>{{ complaint.admin.user.fname }} {{ complaint.admin.user.lname }}</td>
+                <td> 
+                    {% if complaint.student %}
+                    <a href="{{ url_for('view_complaint_details', student_id=complaint.student.stud_id, complaint_id=complaint.comp_id) }}" class="btn btn-info btn-sm">View Complaint</a>
+                    {% else %}
+                        No student data
+                    {% endif %}
+                </td>
                 <td>
                     {% if complaint.comp_status == 'Resolved' %}
                         {{ complaint.comp_dateresolved.strftime('%Y-%m-%d') }}
@@ -77,6 +85,8 @@
             </div>
             <div class="modal-body">
                 <form id="statusForm" method="POST">
+                    <!-- Hidden CSRF Token -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="statusSelect" class="form-label">Select Status</label>
                         <select id="statusSelect" name="comp_status" class="form-select" required>
@@ -99,4 +109,5 @@ function openStatusModal(compId, currentStatus) {
     statusModal.show();
 }
 </script>
+
 {% endblock %}

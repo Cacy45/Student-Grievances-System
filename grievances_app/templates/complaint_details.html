@@ -1,0 +1,66 @@
+{% extends 'supervisor_base.html' %}
+
+{% block body %}
+    <h2>Student Details</h2>
+    <table class="table">
+        <tr>
+            <th>Student Name</th>
+            <td>{{ student.user.fname }} {{ student.user.lname }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ student.user.email }}</td>
+        </tr>
+        <tr>
+            <th>Phone</th>
+            <td>{{ student.user.phone }}</td>
+        </tr>
+    </table>
+
+    <h3>Complaint Details</h3>
+    <table class="table">
+        <tr>
+            <th>Date Filed</th>
+            <td>{{ complaint.comp_datefiled.strftime('%Y-%m-%d') }}</td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>{{ complaint.comp_descr }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>{{ complaint.comp_status }}</td>
+        </tr>
+        <tr>
+            <th>Assigned Admin</th>
+            <td>
+                {% if complaint.admin %}
+                    {{ complaint.admin.user.fname }} {{ complaint.admin.user.lname }}
+                {% else %}
+                    Not assigned
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Document</th>
+            <td>
+                {% if complaint.comp_doc %}
+                    <a href="{{ url_for('static', filename='uploads/' + complaint.comp_doc) }}" target="_blank">View</a>
+                {% else %}
+                    No document
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Resolution Date</th>
+            <td>
+                {% if complaint.comp_dateresolved %}
+                    {{ complaint.comp_dateresolved.strftime('%Y-%m-%d') }}
+                {% else %}
+                    Pending
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+{% endblock %}

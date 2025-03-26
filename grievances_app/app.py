@@ -29,7 +29,7 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))  # Fixed SQLAlchemy 2.0 `get()`
+    return db.session.get(User, int(user_id))  
 
 #======================================Shared Routes============================================#
 @app.route('/')
@@ -38,7 +38,7 @@ def home():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    departments = Department.query.all()  # Fetch all departments
+    departments = Department.query.all()
 
     if request.method == 'POST':
         fname = request.form['fname']
@@ -50,7 +50,7 @@ def register():
         role = request.form['role']
         dept_id = request.form.get('dept_id')
 
-        print(f"Role selected: {role}")  #Debugging Role
+        print(f"Role selected: {role}")  
         print(f"Selected department: {dept_id}")
 
         if password != confirm_password:
@@ -62,37 +62,42 @@ def register():
             flash('Email is already registered.', 'danger')
             return redirect(url_for('register'))
 
+        # Convert dept_id to integer and validate
+        if role in ["admin", "supervisor"]:
+            if not dept_id:
+                flash(f"{role.capitalize()} must select a department.", "danger")
+                return redirect(url_for('register'))
+            dept_id = int(dept_id)  # Convert from string to integer
+
+        # Create User and commit
         user = User(fname=fname, lname=lname, email=email, phone=phone, role=role)
         user.set_password(password)
-
         db.session.add(user)
         db.session.commit()
 
-        if role == "student":
-            db.session.add(Student(user_id=user.user_id))
-        elif role == "admin":
-            if not dept_id:
-                flash("Admin must select a department.", "danger")
-                return redirect(url_for('register'))
-            db.session.add(Admin(user_id=user.user_id, dept_id=dept_id))
+        print(f"User {user.user_id} created successfully!")
 
-            print(f"Admin added: {new_admin}") #debug
-            
+        # role-specific details
+        if role == "student":
+            student = Student(user_id=user.user_id)
+            db.session.add(student)
+            print(f"Student {student.stud_id} created.")
+        elif role == "admin":
+            admin = Admin(user_id=user.user_id, dept_id=dept_id)
+            db.session.add(admin)
+            print(f"Admin {admin.admin_id} created with Dept ID {dept_id}.")
         elif role == "supervisor":
-            if not dept_id:
-                flash("Supervisor must select a department.", "danger")
-                return redirect(url_for('register'))
-            db.session.add(Supervisor(user_id=user.user_id, dept_id=dept_id))
-            
+            supervisor = Supervisor(user_id=user.user_id, dept_id=dept_id)
+            db.session.add(supervisor)
+            print(f"Supervisor {supervisor.superv_id} created with Dept ID {dept_id}.")
 
         db.session.commit()
 
         flash('Account created successfully! You can now log in.', 'success')
-        print("Redirecting to login page...")  
-
         return redirect(url_for('login'))  
 
     return render_template('register.html', departments=departments)
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -102,25 +107,28 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
 
-        if user and user.check_password(password):  
-            login_user(user)
-            print(f"User {user.email} logged in as {user.role}")  # Debugging
-            flash('Login successful!', 'success')
+        if not user:
+            flash('Invalid email or password.', 'danger')
+            return redirect(url_for('login'))
 
-            if user.role == 'student':
-                if Student.query.filter_by(user_id=user.user_id).first():
-                    return redirect(url_for('student_dashboard'))
-            elif user.role == 'admin':
-                if Admin.query.filter_by(user_id=user.user_id).first():
-                    return redirect(url_for('admin_dashboard'))
-            elif user.role == 'supervisor':
-                if Supervisor.query.filter_by(user_id=user.user_id).first():
-                    return redirect(url_for('supervisor_dashboard'))
+        if not user.check_password(password):
+            flash('Invalid email or password.', 'danger')
+            return redirect(url_for('login'))
 
-            flash('Profile missing. Contact admin.', 'danger')
-            return redirect(url_for('home'))
+        login_user(user)
+        print(f"User {user.email} logged in as {user.role}")  # Debugging
+        flash('Login successful!', 'success')
 
-        flash('Login failed. Check your email and password.', 'danger')
+        # Role-based redirection
+        if user.role == 'student' and Student.query.filter_by(user_id=user.user_id).first():
+            return redirect(url_for('student_dashboard'))
+        elif user.role == 'admin' and Admin.query.filter_by(user_id=user.user_id).first():
+            return redirect(url_for('admin_dashboard'))
+        elif user.role == 'supervisor' and Supervisor.query.filter_by(user_id=user.user_id).first():
+            return redirect(url_for('supervisor_dashboard'))
+
+        flash('Profile missing. Contact admin.', 'danger')
+        return redirect(url_for('home'))
 
     return render_template('login.html')
 
@@ -214,42 +222,7 @@ def update_complaint(comp_id):
         db.session.commit()
         flash("Complaint updated successfully.", "success")
         return redirect(url_for('manage_complaints'))
-
-
-"""
-@app.route('/admin/complaint/delete/<int:comp_id>', methods=['GET', 'POST'])
-@login_required
-def delete_complaint(comp_id):
-    if current_user.role != 'admin':
-        flash("Unauthorized access.", "danger")
-        return redirect(url_for('home'))
     
-    complaint = Complaint.query.get_or_404(comp_id)
-
-    if request.method == 'POST':
-        # Delete complaint
-        db.session.delete(complaint)
-        db.session.commit()
-        flash("Complaint deleted successfully.", "success")
-        return redirect(url_for('manage_complaints'))
-
-    # If GET request, render a confirmation page
-    return render_template('confirm_delete.html', complaint=complaint)
-    
-
-
-@app.route('/admin/transfer_complaints')
-@login_required
-def transfer_complaints():
-    if current_user.role != 'admin':
-        flash("Unauthorized access.", "danger")
-        return redirect(url_for('home'))
-    
-    complaints = Complaint.query.filter_by(comp_status='Pending').all()
-    supervisors = Supervisor.query.filter_by(dept_id=current_user.admin.dept_id).all()
-    return render_template('transfer_complaints.html', complaints=complaints, supervisors=supervisors)
-"""
-
 
 @app.route('/admin/complaint/transfer/<int:comp_id>', methods=['GET', 'POST'])
 @login_required
@@ -368,7 +341,28 @@ def supervisor_manage_complaints():
 
     complaints = complaints.order_by(Complaint.comp_datefiled.desc()).all()
 
+    # Preload student data for each complaint to avoid querying in the template
+    for complaint in complaints:
+        complaint.student = Student.query.get(complaint.stud_id)
+
     return render_template('supervisor_manage_complaints.html', complaints=complaints, selected_status=status_filter, search_query=search_query)
+
+
+@app.route('/supervisor/student/<int:student_id>/complaint/<int:complaint_id>')
+@login_required
+def view_complaint_details(student_id, complaint_id):
+    if current_user.role != "supervisor":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('login'))
+
+    student = Student.query.filter_by(stud_id=student_id).first_or_404()
+
+    # Fetch the complaint related to the student using stud_id and complaint_id
+    complaint = Complaint.query.filter_by(stud_id=student.stud_id, comp_id=complaint_id).first_or_404()
+
+    return render_template('complaint_details.html', student=student, complaint=complaint)
+
+
 
 
 @app.route('/supervisor/complaint/update/<int:comp_id>', methods=['POST'])
@@ -385,8 +379,13 @@ def update_complaint_status(comp_id):
         flash("Unauthorized access to complaint.", "danger")
         return redirect(url_for('supervisor_manage_complaints'))
 
-    new_status = request.form.get('status')
+    new_status = request.form.get('comp_status')  # Adjusted to match form field name
     if new_status:
+        # Validate the status
+        if new_status not in ['Pending', 'Resolved']:  # Add any other valid statuses if needed
+            flash("Invalid status.", "danger")
+            return redirect(url_for('supervisor_manage_complaints'))
+
         complaint.comp_status = new_status
 
         # If resolved, set the resolution date
@@ -395,8 +394,11 @@ def update_complaint_status(comp_id):
 
         db.session.commit()
         flash("Complaint status updated successfully.", "success")
+    else:
+        flash("Please select a valid status.", "danger")
 
     return redirect(url_for('supervisor_manage_complaints'))
+
 
 #Cacilda- Remove this route
 @app.route('/supervisor/complaints/<int:complaint_id>')
@@ -500,12 +502,7 @@ def performance_analytics():
                            months=months or [],  # Ensure it's always defined
                            complaints_per_month=complaints_per_month or [])  # Ensure it's always defined
 
-"""
-@app.route('/supervisor_dashboard')
-@login_required
-def supervisor_dashboard():
-    return render_template('supervisor_dashboard.html', user=current_user)
-"""
+
 #============================================Student Routes===================================================#
 @app.route('/student_dashboard')
 @login_required
