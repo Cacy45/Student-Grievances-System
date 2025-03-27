@@ -4,7 +4,6 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
 from models import Admin, Complaint, Department, Student, db
-from utils import allowed_file, get_least_loaded_admin
 from config import Config
 
 student_bp = Blueprint('student', __name__)
