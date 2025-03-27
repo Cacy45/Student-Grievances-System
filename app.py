@@ -599,21 +599,51 @@ def view_grievances():
         flash("No student profile found. Please contact administration.", "warning")
         return redirect(url_for('student_dashboard'))
 
-    grievances = Complaint.query.filter_by(stud_id=student.stud_id).all()
-    return render_template('student/view_grievances.html', grievances=grievances)
+    # Get filter and search values from the URL parameters
+    selected_status = request.args.get('status', 'All')  # Default is 'All'
+    search_query = request.args.get('search', '')  # Default is empty string
 
-#Is this route being used?
+    # Query grievances based on filters
+    grievances_query = Complaint.query.filter_by(stud_id=student.stud_id)
+
+    # Apply filters for status
+    if selected_status != 'All':
+        grievances_query = grievances_query.filter(Complaint.comp_status == selected_status)
+    
+    # Apply search query
+    if search_query:
+        grievances_query = grievances_query.filter(Complaint.comp_descr.ilike(f'%{search_query}%'))
+
+    # Fetch grievances from the database
+    grievances = grievances_query.all()
+
+    return render_template('student/view_grievances.html', grievances=grievances,
+                           selected_status=selected_status, search_query=search_query)
+
 @app.route('/grievance/<int:comp_id>')
 @login_required
 def view_grievance_detail(comp_id):
-    grievance = db.session.get(Complaint, comp_id)
-    student = Student.query.filter_by(user_id=current_user.user_id).first()
+    # Fetch the grievance from the database
+    grievance = Complaint.query.get(comp_id)
+    if not grievance:
+        flash("Grievance not found.", "danger")
+        return redirect(url_for('view_grievances'))
 
-    if not grievance or not student or grievance.stud_id != student.stud_id:
+    # Fetch the student details
+    student = Student.query.filter_by(user_id=current_user.user_id).first()
+    if not student:
+        flash("No student profile found. Please contact administration.", "warning")
+        return redirect(url_for('student_dashboard'))
+
+    # Ensure the grievance belongs to the logged-in student
+    if grievance.stud_id != student.stud_id:
         flash("Unauthorized access!", "danger")
         return redirect(url_for('view_grievances'))
 
-    return render_template('grievance_detail.html', grievance=grievance)
+    # If everything is fine, render the grievance details page
+    return render_template('student/view_grievance_detail.html', grievance=grievance, student=student)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
