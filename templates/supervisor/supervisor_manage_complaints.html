@@ -63,7 +63,7 @@
                 <td>{{ complaint.admin.user.fname }} {{ complaint.admin.user.lname }}</td>
                 <td> 
                     {% if complaint.student %}
-                    <a href="{{ url_for('view_complaint_details', student_id=complaint.student.stud_id, complaint_id=complaint.comp_id) }}" class="btn btn-info btn-sm">View Complaint</a>
+                    <a href="{{ url_for('supervisor.view_complaint_details', student_id=complaint.student.stud_id, complaint_id=complaint.comp_id) }}" class="btn btn-info btn-sm">View Complaint</a>
                     {% else %}
                         No student data
                     {% endif %}

@@ -25,7 +25,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{url_for('home')}}">
+            <a class="navbar-brand" href="{{ url_for('shared.home') }}">
                 <img src="{{ url_for('static', filename='images/DUT-banner-removebg-preview.png') }}" alt="DUT Logo" width="50">
                 DUT Student Grievances
             </a>
@@ -34,11 +34,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{url_for('home')}}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{url_for('shared.home')}}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#About">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="#Contact">Contact</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-light text-primary px-3" href="{{ url_for('login') }}">Login</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-light ms-2 px-3" href="{{ url_for('register') }}">Sign Up</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-light text-primary px-3" href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-outline-light ms-2 px-3" href="{{ url_for('auth.register') }}">Sign Up</a></li>
                 </ul>
             </div>
         </div>
