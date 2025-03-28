@@ -11,17 +11,19 @@
         <!-- Status Filter -->
         <div class="col-md-4">
             <select id="statusFilter" class="form-select">
-                <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All</option>
-                <option value="New" {% if selected_status == 'New' %}selected{% endif %}>New</option>
-                <option value="In Progress" {% if selected_status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="All" {% if selected_status=='All' %}selected{% endif %}>All</option>
+                <option value="New" {% if selected_status=='New' %}selected{% endif %}>New</option>
+                <option value="In Progress" {% if selected_status=='In Progress' %}selected{% endif %}>In Progress
+                </option>
+                <option value="Resolved" {% if selected_status=='Resolved' %}selected{% endif %}>Resolved</option>
+                <option value="Rejected" {% if selected_status=='Rejected' %}selected{% endif %}>Rejected</option>
             </select>
         </div>
 
         <!-- Search Input -->
         <div class="col-md-6">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search grievances..." value="{{ search_query }}">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search grievances..."
+                value="{{ search_query }}">
         </div>
 
         <!-- Search Button -->
@@ -61,10 +63,8 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{{ url_for('student.grievance_details', comp_id=grievance.comp_id) }}" class="btn btn-info btn-sm">View</a>
-                        {% if grievance.comp_status == 'Resolved' %}
-                            <a href="{{ url_for('student.submit_feedback', comp_id=grievance.comp_id) }}" class="btn btn-success btn-sm">Feedback</a>
-                        {% endif %}
+                        <a href="{{ url_for('student.grievance_details', comp_id=grievance.comp_id) }}"
+                            class="btn btn-info btn-sm">View</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -77,24 +77,24 @@
 </div>
 
 <script>
-function applyFilters() {
-    var status = document.getElementById("statusFilter").value;
-    var search = document.getElementById("searchInput").value.trim();
-    var url = new URL(window.location.href);
-    
-    if (status !== "All") {
-        url.searchParams.set("status", status);
-    } else {
-        url.searchParams.delete("status");
-    }
+    function applyFilters() {
+        var status = document.getElementById("statusFilter").value;
+        var search = document.getElementById("searchInput").value.trim();
+        var url = new URL(window.location.href);
 
-    if (search) {
-        url.searchParams.set("search", search);
-    } else {
-        url.searchParams.delete("search");
-    }
+        if (status !== "All") {
+            url.searchParams.set("status", status);
+        } else {
+            url.searchParams.delete("status");
+        }
 
-    window.location.href = url.toString();
-}
+        if (search) {
+            url.searchParams.set("search", search);
+        } else {
+            url.searchParams.delete("search");
+        }
+
+        window.location.href = url.toString();
+    }
 </script>
 {% endblock %}

@@ -1,45 +1,122 @@
-
 {% extends 'student/student_base.html' %}
 
-{% block head %}
-<title>Student Dashboard</title>
+{% block title %}Student Dashboard{% endblock %}
 
+{% block body %}
 <style>
-    body {
-        background-color: #f8f9fa;
+    .content {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        width: 80%;
+        max-width: 1200px;
     }
-    .dashboard-card {
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    .welcome-card,
+    .grievance-card {
+        padding: 20px;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        width: 48%;
+        text-align: center;
+    }
+
+    .profile-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .profile-icon {
+        width: 80px;
+        height: 80px;
+        background-color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid #007bff;
+        transition: transform 0.2s;
+        margin-bottom: 15px;
+        background-image: url(https://tse1.mm.bing.net/th?id=OIP.Q00nSLTKEcoO5wUt7_dUmAHaHb&pid=Api&P=0&h=220);
+        background-size: cover;
+        background-position: center;
+    }
+
+    .profile-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .edit-profile {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 100%;
+        transform: translateY(-50%);
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .profile-container:hover .edit-profile {
+        display: block;
+    }
+
+    .btn {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+
+    .footer {
+        background-color: #007bff;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        height: 60px;
+        /* Fixed height */
+    }
+
+    .logo {
+        height: 40px;
+        margin-right: 10px;
     }
 </style>
-{% endblock %}
 
-{%block body%}
-
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card dashboard-card p-3">
-                    <h5>Welcome, {{ user.fname }}</h5>
-                    <p>Email: {{ user.email }}</p>
-                    <p>Phone: {{ user.phone }}</p>
-                </div>
+<div class="container">
+    <div class="row">
+        <div class="welcome-card">
+            <div class="profile-container">
+                <div class="profile-icon"></div>
+                <div class="edit-profile">Edit Profile</div>
             </div>
-            <div class="col-md-8">
-                <div class="card dashboard-card p-3">
-                    <h5>Recent Grievances</h5>
-                    <ul class="list-group">
-                        <li class="list-group-item">Grievance #1 - Pending</li>
-                        <li class="list-group-item">Grievance #2 - Resolved</li>
-                        <li class="list-group-item">Grievance #3 - In Progress</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary mt-3">View All</a>
-                </div>
-            </div>
+            <h3>Welcome, Cacilda</h3>
+            <p>Email: example@du4life.ac.za</p>
+            <p>Phone: 0774750646</p>
+            <button class="btn">Submit Grievance</button>
+            <button class="btn">Past Grievances</button>
+        </div>
+
+        <div class="grievance-card">
+            <h3>Recent Grievances</h3>
+            <ul style="list-style-type: none; padding: 0;">
+                <li><button class="btn">Resolved</button></li>
+                <li><button class="btn">In Progress</button></li>
+            </ul>
         </div>
     </div>
-    
-   
-    {% endblock %}
+</div>
+
+{% endblock %}

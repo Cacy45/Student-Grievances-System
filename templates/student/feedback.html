@@ -1,226 +1,76 @@
 {% extends 'student/student_base.html' %}
 
-{% block title %}Rate Your Service{% endblock %}
+{% block title %}Feedback Form{% endblock %}
 
 {% block body %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="text-center mb-0">Service Feedback Form</h2>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('student.submit_feedback', comp_id=complaint.comp_id) }}" method="post">
+                <!-- Service Quality -->
+                <div class="form-group mb-4">
+                    <label class="form-label fw-bold">How would you rate the quality of service?</label>
+                    <div class="btn-group d-flex" role="group">
+                        {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
+                        <input type="radio" class="btn-check" name="service_quality" value="{{ rating }}" 
+                               id="service_{{ rating|lower }}" required>
+                        <label class="btn btn-outline-primary" for="service_{{ rating|lower }}">{{ rating }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Staff Behavior -->
+                <div class="form-group mb-4">
+                    <label class="form-label fw-bold">How would you rate the staff behavior?</label>
+                    <div class="btn-group d-flex" role="group">
+                        {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
+                        <input type="radio" class="btn-check" name="staff_behaviour" value="{{ rating }}" 
+                               id="staff_{{ rating|lower }}" required>
+                        <label class="btn btn-outline-primary" for="staff_{{ rating|lower }}">{{ rating }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Overall Experience -->
+                <div class="form-group mb-4">
+                    <label class="form-label fw-bold">Overall satisfaction with the service</label>
+                    <div class="btn-group d-flex" role="group">
+                        {% for rating in ['Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'] %}
+                        <input type="radio" class="btn-check" name="overall_experience" value="{{ rating }}" 
+                               id="overall_{{ rating|lower }}" required>
+                        <label class="btn btn-outline-primary" for="overall_{{ rating|lower }}">{{ rating }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div class="form-group mb-4">
+                    <label class="form-label fw-bold">Additional Comments</label>
+                    <textarea name="comments" class="form-control" rows="4" 
+                              placeholder="Please share any additional feedback or suggestions..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">Submit Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
-  body {
-
-    background-color: #e0f7fa;
-
-    /* Light teal background */
-
-    color: #1e88e5;
-
-    /* Light blue text */
-
-  }
-
-  header {
-
-    background-color: #1e88e5;
-
-    /* Light blue header */
-
-    color: white;
-
-    padding: 20px;
-
-    text-align: center;
-
-  }
-
-  .container {
-
-    background-color: white;
-
-    padding: 20px;
-
-    border-radius: 10px;
-
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-  }
-
-  h2 {
-
-    color: #1e88e5;
-
-    text-align: center;
-
-  }
-
-  .rating {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    max-width: 200px;
-
-    margin: 10px 0;
-
-  }
-
-  .rating input[type="radio"] {
-
-    display: none;
-
-  }
-
-  .rating label {
-
-    font-size: 36px;
-
-    color: #1e88e5;
-
-    /* Default blue color */
-
-    cursor: pointer;
-
-    transition: color 0.3s ease;
-
-  }
-
-  /* When radio is checked, fill the stars in blue */
-
-  .rating input[type="radio"]:checked~label,
-
-  .rating label:hover {
-
-    color: #1565c0;
-
-    /* Dark blue color for filled stars */
-
-  }
-
-  /* Hover effect for unselected stars */
-
-  .rating label:hover {
-
-    color: #1976d2;
-
-    /* Slightly lighter blue on hover */
-
-  }
-
-  .submit-btn {
-
-    background-color: #1e88e5;
-
-    color: white;
-
-    padding: 10px 20px;
-
-    border: none;
-
-    border-radius: 5px;
-
-    cursor: pointer;
-
-    width: 100%;
-
-    font-size: 16px;
-
-  }
-
-  .submit-btn:hover {
-
-    background-color: #1565c0;
-
-  }
-
-  /* Pop-up message style */
-
-  #thank-you-message {
-
-    display: none;
-
-    position: fixed;
-
-    top: 20%;
-
-    left: 50%;
-
-    transform: translateX(-50%);
-
-    padding: 20px;
-
-    background-color: #1565c0;
-
-    color: white;
-
-    font-size: 18px;
-
-    border-radius: 5px;
-
-  }
+.btn-group {
+    flex-wrap: nowrap;
+}
+.btn-group .btn {
+    flex: 1;
+}
+.form-label {
+    margin-bottom: 1rem;
+}
 </style>
-
-<div class="container">
-  <h2>Please rate the service you received</h2>
-
-  <form id="rating-form" action="{{ url_for('student.submit_feedback', comp_id=complaint.comp_id) }}" method="post">
-    <div class="form-group">
-      <label for="service_quality">How would you rate the quality of the service?</label>
-      <div class="rating">
-        <input type="radio" id="excellent" name="service_quality" value="Excellent" required>
-        <label for="excellent">☆</label>
-        <input type="radio" id="good" name="service_quality" value="Good">
-        <label for="good">☆</label>
-        <input type="radio" id="average" name="service_quality" value="Average">
-        <label for="average">☆</label>
-        <input type="radio" id="poor" name="service_quality" value="Poor">
-        <label for="poor">☆</label>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="staff_behaviour">How was the behavior of the staff?</label>
-      <div class="rating">
-        <input type="radio" id="excellent_behaviour" name="staff_behaviour" value="Excellent" required>
-        <label for="excellent_behaviour">☆</label>
-        <input type="radio" id="good_behaviour" name="staff_behaviour" value="Good">
-        <label for="good_behaviour">☆</label>
-        <input type="radio" id="average_behaviour" name="staff_behaviour" value="Average">
-        <label for="average_behaviour">☆</label>
-        <input type="radio" id="poor_behaviour" name="staff_behaviour" value="Poor">
-        <label for="poor_behaviour">☆</label>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="overall_experience">Overall, how satisfied are you with the service?</label>
-      <div class="rating">
-        <input type="radio" id="very_satisfied" name="overall_experience" value="Very Satisfied" required>
-        <label for="very_satisfied">☆</label>
-        <input type="radio" id="satisfied" name="overall_experience" value="Satisfied">
-        <label for="satisfied">☆</label>
-        <input type="radio" id="neutral" name="overall_experience" value="Neutral">
-        <label for="neutral">☆</label>
-        <input type="radio" id="dissatisfied" name="overall_experience" value="Dissatisfied">
-        <label for="dissatisfied">☆</label>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="comments">Any comments or suggestions to improve the service?</label>
-      <textarea id="comments" name="comments" class="form-control" placeholder="Your comments here..."></textarea>
-    </div>
-
-    <button type="submit" class="submit-btn btn btn-primary">Submit Feedback</button>
-  </form>
-</div>
-
-<!-- Pop-up message -->
-<div id="thank-you-message">
-
-  Thank you for your feedback!
-</div>
-
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 {% endblock %}
