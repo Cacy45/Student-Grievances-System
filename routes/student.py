@@ -11,8 +11,6 @@ student_bp = Blueprint('student', __name__)
 @student_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # ...existing code for student dashboard...
-    
     return render_template('student/student_dashboard.html', user=current_user)
 
 def allowed_file(filename):
@@ -87,7 +85,7 @@ def get_least_loaded_admin(department):
 @student_bp.route('/view_grievances')
 @login_required
 def view_grievances():
-    # ...existing code for viewing grievances...
+    # ...existing code...
     if current_user.role != 'student':
         flash("Access denied. Only students can view grievances.", "danger")
         return redirect(url_for('auth.home'))
@@ -97,6 +95,45 @@ def view_grievances():
         flash("No student profile found. Please contact administration.", "warning")
         return redirect(url_for('student.dashboard'))
 
-    grievances = Complaint.query.filter_by(stud_id=student.stud_id).all()
+    # Get the status and search query from the request
+    status = request.args.get('status', 'All')
+    search_query = request.args.get('search', '')
+
+    # Start with all grievances for the student
+    grievances_query = Complaint.query.filter_by(stud_id=student.stud_id)
+
+    # Apply status filter
+    if status != 'All':
+        grievances_query = grievances_query.filter_by(comp_status=status)
+
+    # Apply search filter
+    if search_query:
+        grievances_query = grievances_query.filter(Complaint.comp_descr.contains(search_query))
+
+    # Get the filtered grievances
+    grievances = grievances_query.all()
     
-    return render_template('student/view_grievances.html', grievances=grievances)
+    return render_template('student/view_grievances.html', grievances=grievances, selected_status=status, search_query=search_query)
+
+@student_bp.route('/grievance_details/<int:comp_id>')
+@login_required
+def grievance_details(comp_id):
+    # Ensure the user is a student
+    if current_user.role != 'student':
+        flash("Access denied. Only students can view grievance details.", "danger")
+        return redirect(url_for('auth.home'))
+
+    # Fetch the grievance by ID
+    grievance = Complaint.query.filter_by(comp_id=comp_id).first()
+
+    if not grievance:
+        flash("Grievance not found.", "warning")
+        return redirect(url_for('student.view_grievances'))
+
+    # Ensure the grievance belongs to the current student
+    student = Student.query.filter_by(user_id=current_user.user_id).first()
+    if not student or grievance.stud_id != student.stud_id:
+        flash("You are not authorized to view this grievance.", "danger")
+        return redirect(url_for('student.view_grievances'))
+
+    return render_template('student/grievence_details.html', grievance=grievance, student=student)
