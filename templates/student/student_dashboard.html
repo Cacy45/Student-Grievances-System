@@ -102,18 +102,18 @@
                 <div class="profile-icon"></div>
                 <div class="edit-profile">Edit Profile</div>
             </div>
-            <h3>Welcome, Cacilda</h3>
-            <p>Email: example@du4life.ac.za</p>
-            <p>Phone: 0774750646</p>
-            <button class="btn">Submit Grievance</button>
-            <button class="btn">Past Grievances</button>
+            <h3>Welcome, {{ user.fname }}</h3>
+            <p>Email: {{ user.email }}</p>
+            <p>Phone: {{ user.phone }}</p>
+            <a class="btn" href="{{ url_for('student.submit_grievance') }}">Submit Grievance</a>
+            <a class="btn" href="{{ url_for('student.view_grievances') }}">Past Grievances</a>
         </div>
 
         <div class="grievance-card">
             <h3>Recent Grievances</h3>
             <ul style="list-style-type: none; padding: 0;">
-                <li><button class="btn">Resolved</button></li>
-                <li><button class="btn">In Progress</button></li>
+                <li><a class="btn" href="{{ url_for('student.view_grievances', status='Resolved') }}">Resolved</a></li>
+                <li><a class="btn" href="{{ url_for('student.view_grievances', status='In Progress') }}">In Progress</a></li>
             </ul>
         </div>
     </div>
