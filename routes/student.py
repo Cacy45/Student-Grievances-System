@@ -95,7 +95,7 @@ def view_grievances():
     student = Student.query.filter_by(user_id=current_user.user_id).first()
     if not student:
         flash("No student profile found. Please contact administration.", "warning")
-        return redirect(url_for('student_dashboard'))
+        return redirect(url_for('student.dashboard'))
 
     grievances = Complaint.query.filter_by(stud_id=student.stud_id).all()
     

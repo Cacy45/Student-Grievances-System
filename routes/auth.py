@@ -88,7 +88,7 @@ def login():
 
         # Role-based redirection
         if user.role == 'student' and Student.query.filter_by(user_id=user.user_id).first():
-            return redirect(url_for('student_dashboard'))
+            return redirect(url_for('student.dashboard'))
         elif user.role == 'admin' and Admin.query.filter_by(user_id=user.user_id).first():
             return redirect(url_for('admin.dashboard'))
         elif user.role == 'supervisor' and Supervisor.query.filter_by(user_id=user.user_id).first():

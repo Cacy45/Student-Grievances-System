@@ -61,7 +61,7 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{{ url_for('view_grievance_detail', comp_id=grievance.comp_id) }}" class="btn btn-info btn-sm">View</a>
+                        <a href="{{ url_for('student.view_grievances', comp_id=grievance.comp_id) }}" class="btn btn-info btn-sm">View</a>
                     </td>
                 </tr>
                 {% endfor %}

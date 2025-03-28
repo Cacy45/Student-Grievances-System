@@ -19,7 +19,7 @@
         {% endif %}
     {% endwith %}
 
-    <form action="{{ url_for('submit_grievance') }}" method="POST" enctype="multipart/form-data" class="mt-4 needs-validation" novalidate>
+    <form action="{{ url_for('student.submit_grievance') }}" method="POST" enctype="multipart/form-data" class="mt-4 needs-validation" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- Complaint Title -->
         <div class="mb-3">
