@@ -31,7 +31,8 @@
                 {% if grievance.comp_doc %}
                 <tr>
                     <th>Attachment</th>
-                    <td><a href="{{ url_for('static', filename='uploads/' + grievance.comp_doc) }}" target="_blank">Download</a></td>
+                    <td><a href="{{ url_for('static', filename='uploads/' + grievance.comp_doc) }}"
+                            target="_blank">Download</a></td>
                 </tr>
                 {% endif %}
             </table>
@@ -56,80 +57,82 @@
     </div>
 
     {% if grievance.comp_status == 'Resolved' %}
-        {% if feedback %}
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h3 class="card-title mb-0">Feedback Submitted</h3>
+    {% if feedback %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h3 class="card-title mb-0">Feedback Submitted</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Service Quality:</strong> {{ feedback.service_quality }}</p>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <p><strong>Service Quality:</strong> {{ feedback.service_quality }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p><strong>Staff Behavior:</strong> {{ feedback.staff_behaviour }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p><strong>Overall Experience:</strong> {{ feedback.overall_experience }}</p>
-                        </div>
-                    </div>
-                    {% if feedback.comments %}
-                        <div class="mt-3">
-                            <strong>Additional Comments:</strong>
-                            <p class="mt-2">{{ feedback.comments }}</p>
-                        </div>
-                    {% endif %}
+                <div class="col-md-4">
+                    <p><strong>Staff Behavior:</strong> {{ feedback.staff_behaviour }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Overall Experience:</strong> {{ feedback.overall_experience }}</p>
                 </div>
             </div>
-        {% else %}
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">Submit Feedback</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label class="form-label">Service Quality</label>
-                            <select name="service_quality" class="form-select" required>
-                                <option value="">Select rating...</option>
-                                {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
-                                    <option value="{{ rating }}">{{ rating }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Staff Behavior</label>
-                            <select name="staff_behaviour" class="form-select" required>
-                                <option value="">Select rating...</option>
-                                {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
-                                    <option value="{{ rating }}">{{ rating }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Overall Experience</label>
-                            <select name="overall_experience" class="form-select" required>
-                                <option value="">Select rating...</option>
-                                {% for rating in ['Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'] %}
-                                    <option value="{{ rating }}">{{ rating }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Additional Comments</label>
-                            <textarea name="comments" class="form-control" rows="3"></textarea>
-                        </div>
-
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">Submit Feedback</button>
-                        </div>
-                    </form>
-                </div>
+            {% if feedback.comments %}
+            <div class="mt-3">
+                <strong>Additional Comments:</strong>
+                <p class="mt-2">{{ feedback.comments }}</p>
             </div>
-        {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Submit Feedback</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Service Quality</label>
+                    <select name="service_quality" class="form-select" required>
+                        <option value="">Select rating...</option>
+                        {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
+                        <option value="{{ rating }}">{{ rating }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Staff Behavior</label>
+                    <select name="staff_behaviour" class="form-select" required>
+                        <option value="">Select rating...</option>
+                        {% for rating in ['Poor', 'Average', 'Good', 'Excellent'] %}
+                        <option value="{{ rating }}">{{ rating }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Overall Experience</label>
+                    <select name="overall_experience" class="form-select" required>
+                        <option value="">Select rating...</option>
+                        {% for rating in ['Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'] %}
+                        <option value="{{ rating }}">{{ rating }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Additional Comments</label>
+                    <textarea name="comments" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}
