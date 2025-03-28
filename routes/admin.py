@@ -68,42 +68,24 @@ def manage_complaints():
 @admin_bp.route("/complaint/update/<int:comp_id>", methods=["POST"])
 @login_required
 def update_complaint(comp_id):
-    # ...existing code for updating complaints...
     if current_user.role != "admin":
-        return jsonify({"success": False, "message": "Unauthorized access"}), 403
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("shared.home"))
 
     complaint = Complaint.query.get_or_404(comp_id)
 
-    # Prevent status update if the complaint is transferred to a supervisor
     if complaint.superv_id:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": "You cannot update the status of a complaint that has been transferred to a supervisor.",
-                }
-            ),
-            403,
-        )
+        flash("Cannot update status of a transferred complaint.", "danger")
+        return redirect(url_for("admin.manage_complaints"))
 
-    if request.is_json:  # Handle AJAX Request
-        data = request.get_json()
-        if "status" in data:
-            complaint.comp_status = data["status"]
-            db.session.commit()
-            return jsonify({"success": True, "new_status": complaint.comp_status})
-
-        return jsonify({"success": False, "message": "Invalid request"}), 400
-
-    else:  # Handle Traditional Form Submission
-        complaint.comp_status = request.form["status"]
-        db.session.commit()
-        flash("Complaint updated successfully.", "success")
-    return jsonify({"success": True, "new_status": complaint.comp_status})
+    complaint.comp_status = request.form["status"]
+    db.session.commit()
+    flash("Complaint status updated successfully.", "success")
+    return redirect(url_for("admin.manage_complaints"))
 
 
 # Where's the html for this route
-@admin_bp.route("/complaint/transfer/<int:comp_id>", methods=["GET", "POST"])
+@admin_bp.route("/complaint/transfer/<int:comp_id>", methods=["POST"])
 @login_required
 def transfer_complaint(comp_id):
     if current_user.role != "admin":
@@ -112,45 +94,44 @@ def transfer_complaint(comp_id):
 
     complaint = Complaint.query.get_or_404(comp_id)
 
-    # Check if the complaint has already been transferred to a supervisor
     if complaint.superv_id:
-        flash("This complaint has already been transferred to a supervisor.", "warning")
+        flash("This complaint has already been transferred.", "warning")
         return redirect(url_for("admin.manage_complaints"))
 
-    # Fetch the supervisors from the same department as the complaint's department
-    supervisors = Supervisor.query.filter_by(dept_id=complaint.comp_dept).all()
+    supervisor_id = request.form.get("supervisor_id")
+    supervisor = Supervisor.query.get(supervisor_id)
 
-    if request.method == "POST":
-        supervisor_id = request.form.get("supervisor_id")
+    if not supervisor:
+        flash("Invalid supervisor selection.", "danger")
+        return redirect(url_for("admin.manage_complaints"))
 
-        if not supervisor_id:
-            flash("Please select a supervisor.", "warning")
-            return redirect(url_for("transfer_complaint", comp_id=comp_id))
+    complaint.superv_id = supervisor.superv_id
+    complaint.comp_status = "Transferred"
+    db.session.commit()
+    flash("Complaint transferred successfully.", "success")
+    return redirect(url_for("admin.manage_complaints"))
+    if current_user.role != "admin":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("shared.home"))
 
-        # Fetch supervisor
-        supervisor = Supervisor.query.get(
-            int(supervisor_id)
-        )  # Make sure it's an integer
+    complaint = Complaint.query.get_or_404(comp_id)
 
-        if not supervisor:
-            flash("Invalid supervisor selection.", "danger")
-            return redirect(url_for("transfer_complaint", comp_id=comp_id))
+    if complaint.superv_id:
+        flash("This complaint has already been transferred.", "warning")
+        return redirect(url_for("admin.manage_complaints"))
 
-        # Update complaint with the supervisor's ID and change status to "Transferred"
-        complaint.superv_id = supervisor.superv_id
-        complaint.comp_status = "Transferred"
+    supervisor_id = request.form.get("supervisor_id")
+    supervisor = Supervisor.query.get(supervisor_id)
 
-        try:
-            db.session.commit()
-            flash("Complaint transferred successfully.", "success")
-            return redirect(url_for("admin.manage_complaints"))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"An error occurred: {e}", "danger")
+    if not supervisor:
+        flash("Invalid supervisor selection.", "danger")
+        return redirect(url_for("admin.manage_complaints"))
 
-    return render_template(
-        "transfer_complaint.html", complaint=complaint, supervisors=supervisors
-    )
+    complaint.superv_id = supervisor.superv_id
+    complaint.comp_status = "Transferred"
+    db.session.commit()
+    flash("Complaint transferred successfully.", "success")
+    return redirect(url_for("admin.manage_complaints"))
 
 
 @admin_bp.route("/profile", methods=["GET", "POST"])

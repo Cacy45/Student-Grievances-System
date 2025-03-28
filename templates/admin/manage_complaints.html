@@ -8,16 +8,18 @@
     <div class="row mb-3">
         <div class="col-md-4">
             <select id="statusFilter" class="form-select">
-                <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All</option>
-                <option value="New" {% if selected_status == 'New' %}selected{% endif %}>New</option>
-                <option value="In Progress" {% if selected_status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="All" {% if selected_status=='All' %}selected{% endif %}>All</option>
+                <option value="New" {% if selected_status=='New' %}selected{% endif %}>New</option>
+                <option value="In Progress" {% if selected_status=='In Progress' %}selected{% endif %}>In Progress
+                </option>
+                <option value="Resolved" {% if selected_status=='Resolved' %}selected{% endif %}>Resolved</option>
+                <option value="Rejected" {% if selected_status=='Rejected' %}selected{% endif %}>Rejected</option>
             </select>
         </div>
 
         <div class="col-md-6">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search complaints..." value="{{ search_query }}">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search complaints..."
+                value="{{ search_query }}">
         </div>
 
         <div class="col-md-2">
@@ -55,16 +57,19 @@
                     </td>
 
                     {% if complaint.comp_anonymous %}
-                        <td colspan="3" class="text-muted">Anonymous</td>
+                    <td colspan="3" class="text-muted">Anonymous</td>
                     {% else %}
-                        <td>{{ complaint.student.user.fname }}</td>
-                        <td>{{ complaint.student.user.lname }}</td>
-                        <td>{{ complaint.student.user.email }}</td>
+                    <td>{{ complaint.student.user.fname }}</td>
+                    <td>{{ complaint.student.user.lname }}</td>
+                    <td>{{ complaint.student.user.email }}</td>
                     {% endif %}
 
                     <td class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-warning btn-sm" onclick="openEditModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')" {% if complaint.superv_id %}disabled{% endif %}>Edit</button>
-                        <button class="btn btn-primary btn-sm" onclick="openTransferModal({{ complaint.comp_id }})" {% if complaint.superv_id %}disabled{% endif %}>Transfer</button>
+                        <button class="btn btn-warning btn-sm"
+                            onclick="openEditModal({{ complaint.comp_id }}, '{{ complaint.comp_status }}')" {% if
+                            complaint.superv_id %}disabled{% endif %}>Edit</button>
+                        <button class="btn btn-primary btn-sm" onclick="openTransferModal({{ complaint.comp_id }})" {%
+                            if complaint.superv_id %}disabled{% endif %}>Transfer</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -82,7 +87,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="updateStatusForm" method="POST">
+                <form id="updateStatusForm" method="POST" action="{{ url_for('admin.update_complaint', comp_id=0) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Select Status</label>
@@ -109,13 +114,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="transferForm" method="POST">
+                <form id="transferForm" method="POST" action="{{ url_for('admin.transfer_complaint', comp_id=0) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Select Supervisor</label>
                         <select id="supervisorSelect" name="supervisor_id" class="form-select">
                             {% for supervisor in supervisors %}
-                                <option value="{{ supervisor.superv_id }}">{{ supervisor.user.fname }} {{ supervisor.user.lname }}</option>
+                            <option value="{{ supervisor.superv_id }}">{{ supervisor.user.fname }} {{
+                                supervisor.user.lname }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -127,35 +133,25 @@
 </div>
 
 <script>
-function applyFilters() {
-    var status = document.getElementById("statusFilter").value;
-    var search = document.getElementById("searchInput").value.trim();
-    var url = new URL(window.location.href);
-
-    if (status !== "All") {
-        url.searchParams.set("status", status);
-    } else {
-        url.searchParams.delete("status");
+    function applyFilters() {
+        const status = document.getElementById('statusFilter').value;
+        const searchQuery = document.getElementById('searchInput').value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('status', status);
+        url.searchParams.set('search', searchQuery);
+        window.location.href = url.toString();
     }
 
-    if (search) {
-        url.searchParams.set("search", search);
-    } else {
-        url.searchParams.delete("search");
+    function openEditModal(compId, currentStatus) {
+        document.getElementById("statusSelect").value = currentStatus;
+        document.getElementById("updateStatusForm").action = `/admin/complaint/update/${compId}`;
+        new bootstrap.Modal(document.getElementById('editModal')).show();
     }
 
-    window.location.href = url.toString();
-}
-
-function openEditModal(compId, currentStatus) {
-    document.getElementById("statusSelect").value = currentStatus;
-    document.getElementById("updateStatusForm").action = `/admin/complaint/update/${compId}`;
-    new bootstrap.Modal(document.getElementById('editModal')).show();
-}
-
-function openTransferModal(compId) {
-    document.getElementById("transferForm").action = `/admin/complaint/transfer/${compId}`;
-    new bootstrap.Modal(document.getElementById('transferModal')).show();
-}
+    function openTransferModal(compId) {
+        document.getElementById("transferForm").action = `/admin/complaint/transfer/${compId}`;
+        new bootstrap.Modal(document.getElementById('transferModal')).show();
+    }
 </script>
+
 {% endblock %}
