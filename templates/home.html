@@ -3,40 +3,213 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-<section class="text-center py-5">
-    <h1 class="fw-bold">Welcome to the DUT Student Grievance System</h1>
-    <p class="lead">A dedicated platform to help students resolve their concerns efficiently and transparently.</p>
+<section class="text-center py-5 bg-gradient text-white position-relative hero-section">
+    <div class="container py-5">
+        <h1 class="fw-bold display-3 mb-4 animate__animated animate__fadeIn">Welcome to the DUT Student Grievance System</h1>
+        <p class="lead fs-3 mb-5 animate__animated animate__fadeIn animate__delay-1s">A dedicated platform to help students resolve their concerns efficiently and transparently.</p>
+        <div class="animate__animated animate__fadeIn animate__delay-2s">
+            <a href="#process" class="btn btn-light btn-lg px-4 me-3">Get Started</a>
+            <a href="#about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+        </div>
+    </div>
+    <div class="hero-shape"></div>
 </section>
 
-<section id="about" class="py-5 bg-light">
-    <div class="container text-center">
-        <h2>About Us</h2>
-        <p>
-            The DUT Student Grievance System ensures students can report issues related to academics, administration, campus facilities, and more.
-            We aim to provide a structured and fair resolution process for all student concerns.
-        </p>
+<section id="about" class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="section-title text-center mb-4">About Us</h2>
+                <div class="about-content">
+                    <i class="fas fa-users fa-2x text-primary mb-4"></i>
+                    <p class="lead text-muted">
+                        The DUT Student Grievance System ensures students can report issues related to academics,
+                        administration, campus facilities, and more.
+                        We aim to provide a structured and fair resolution process for all student concerns.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section id="contact" class="py-5">
-    <div class="container text-center">
-        <h2>Contact Us</h2>
-        <p>Need assistance? Reach out to us:</p>
-        <p><strong>Email:</strong> <a href="mailto:grievances@dut.ac.za">grievances@dut.ac.za</a></p>
-        <p><strong>Phone:</strong> +27 31 123 4567</p>
-        <p><strong>Office:</strong> Student Support Center, DUT Campus</p>
+<section id="contact" class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Get in Touch</h2>
+        <div class="row justify-content-center contact-list">
+            <div class="col-md-4">
+                <div class="contact-item">
+                    <i class="fas fa-envelope text-primary"></i>
+                    <h5>Email</h5>
+                    <a href="mailto:grievances@dut.ac.za" class="text-decoration-none">grievances@dut.ac.za</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-item">
+                    <i class="fas fa-phone text-primary"></i>
+                    <h5>Phone</h5>
+                    <p>+27 31 123 4567</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="contact-item">
+                    <i class="fas fa-building text-primary"></i>
+                    <h5>Office</h5>
+                    <p>Student Support Center, DUT Campus</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section id="process" class="py-5 bg-light">
-    <div class="container text-center">
-        <h2>How It Works</h2>
-        <p>Follow these steps to resolve your concerns efficiently:</p>
-        <ol class="text-start d-inline-block">
-            <li><strong>Submit a grievance:</strong> Provide detailed information and any supporting documents.</li>
-            <li><strong>Track progress:</strong> Monitor the status of your grievance through the dashboard.</li>
-            <li><strong>Receive resolution:</strong> Get notified when a decision is made and take further action if necessary.</li>
-        </ol>
+<section id="process" class="py-5">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">How It Works</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <i class="fas fa-file-alt text-primary"></i>
+                    <h5>1. Submit a grievance</h5>
+                    <p>Provide detailed information and any supporting documents.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <i class="fas fa-tasks text-primary"></i>
+                    <h5>2. Track progress</h5>
+                    <p>Monitor the status of your grievance through the dashboard.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <i class="fas fa-check-circle text-primary"></i>
+                    <h5>3. Receive resolution</h5>
+                    <p>Get notified when a decision is made and take further action if necessary.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
+
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-shape {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: #fff;
+    clip-path: polygon(0 100%, 100% 100%, 100% 0);
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: #0d6efd;
+}
+
+.about-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.contact-item {
+    text-align: center;
+    padding: 2rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+    border-bottom-color: #0d6efd;
+}
+
+.contact-item i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.timeline {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.timeline-content {
+    position: relative;
+    width: calc(50% - 30px);
+    padding: 1.5rem;
+    border-left: 3px solid #0d6efd;
+    margin-left: 50%;
+}
+
+.timeline-item:nth-child(even) .timeline-content {
+    margin-left: 0;
+    margin-right: 50%;
+    border-left: none;
+    border-right: 3px solid #0d6efd;
+    text-align: right;
+}
+
+.timeline-content i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .timeline::before {
+        left: 0;
+    }
+    
+    .timeline-content {
+        width: calc(100% - 30px);
+        margin-left: 30px;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-content {
+        margin-left: 30px;
+        margin-right: 0;
+        border-left: 3px solid #0d6efd;
+        border-right: none;
+        text-align: left;
+    }
+}
+</style>
+
 {% endblock %}
