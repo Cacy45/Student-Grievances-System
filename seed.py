@@ -1,11 +1,20 @@
-from models import db, User, Department, Student, Admin, Supervisor, Complaint, Appeal
+import sys
+
+from models import (
+    db,
+    User,
+    Department,
+    Student,
+    Admin,
+    Supervisor,
+    Complaint,
+    Appeal,
+    Feedback,
+)
 from werkzeug.security import generate_password_hash
 
-def seed_data():
-    # Wipe the database
-    db.drop_all()
-    db.create_all()
 
+def seed_data():
     # Create departments
     dept1 = Department(dept_name="Department of Finance")
     dept2 = Department(dept_name="Department of Student Housing and Residence Life")
@@ -17,15 +26,35 @@ def seed_data():
     dept8 = Department(dept_name="Department of Student Health and Wellness")
     dept9 = Department(dept_name="International Education and Partnerships Office")
     dept10 = Department(dept_name="Department of Protection Services")
-    db.session.add_all([dept1, dept2, dept3, dept4, dept5, dept6, dept7, dept8, dept9, dept10])
+    db.session.add_all(
+        [dept1, dept2, dept3, dept4, dept5, dept6, dept7, dept8, dept9, dept10]
+    )
 
     # Create users
-    user1 = User(fname="John", lname="Doe", email="john.doe@dut4life.ac.za", phone="1234567890",
-                 password=generate_password_hash("password123"), role="student")
-    user2 = User(fname="Jane", lname="Smith", email="jane.smith@dut4life.ac.za", phone="0987654321",
-                 password=generate_password_hash("password123"), role="admin")
-    user3 = User(fname="Alice", lname="Brown", email="alice.brown@dut4life.ac.za", phone="1122334455",
-                 password=generate_password_hash("password123"), role="supervisor")
+    user1 = User(
+        fname="John",
+        lname="Doe",
+        email="john.doe@dut4life.ac.za",
+        phone="1234567890",
+        password=generate_password_hash("password123"),
+        role="student",
+    )
+    user2 = User(
+        fname="Jane",
+        lname="Smith",
+        email="jane.smith@dut4life.ac.za",
+        phone="0987654321",
+        password=generate_password_hash("password123"),
+        role="admin",
+    )
+    user3 = User(
+        fname="Alice",
+        lname="Brown",
+        email="alice.brown@dut4life.ac.za",
+        phone="1122334455",
+        password=generate_password_hash("password123"),
+        role="supervisor",
+    )
     db.session.add_all([user1, user2, user3])
 
     # Create student
@@ -41,19 +70,43 @@ def seed_data():
     db.session.add(supervisor1)
 
     # Create complaints
-    complaint1 = Complaint(comp_descr="Issue with course material", comp_dept="Computer Science",
-                            stud_id=1, comp_anonymous=False)
+    complaint1 = Complaint(
+        comp_title="Issue with course material",
+        comp_doc=None,
+        comp_descr="Issue with course material",
+        comp_dept="Computer Science",
+        stud_id=1,
+        comp_anonymous=False,
+    )
     db.session.add(complaint1)
 
     # Create appeals
     appeal1 = Appeal(appeal_reason="Unresolved complaint", comp_id=1, stud_id=1)
     db.session.add(appeal1)
 
+    # Create feedback
+    feedback1 = Feedback(
+        service_quality="Good",
+        staff_behaviour="Excellent",
+        overall_experience="Very Satisfied",
+        comments="The staff was very helpful and professional",
+        comp_id=1,
+        stud_id=1,
+    )
+    db.session.add(feedback1)
+
     # Commit all changes
     db.session.commit()
     print("Database wiped and seeded successfully!")
 
+
 if __name__ == "__main__":
-    from app import app  # Import the Flask app to initialize the context
+    from app import app
+
     with app.app_context():
-        seed_data()
+        # Wipe the database
+        db.drop_all()
+        db.create_all()
+        if not sys.argv[1:] or sys.argv[1] != "--no-seed":
+            # Seed the database
+            seed_data()

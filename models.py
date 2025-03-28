@@ -71,6 +71,7 @@ class Complaint(db.Model):
     comp_anonymous = db.Column(db.Boolean, default=False)
     comp_dateresolved = db.Column(db.DateTime, nullable=True)
     comp_doc = db.Column(db.String(300), nullable=True)  # Stores filename of uploaded document
+    comp_title = db.Column(db.String(200), nullable=False)  # New field for complaint title
     
     stud_id = db.Column(db.Integer, db.ForeignKey('student.stud_id'), nullable=True)
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.admin_id'), nullable=True)
@@ -90,3 +91,19 @@ class Appeal(db.Model):
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.admin_id'), nullable=True)
     superv_id = db.Column(db.Integer, db.ForeignKey('supervisor.superv_id'), nullable=True)
     stud_id = db.Column(db.Integer, db.ForeignKey('student.stud_id'), nullable=False)
+
+class Feedback(db.Model):
+    feedback_id = db.Column(db.Integer, primary_key=True)
+    service_quality = db.Column(db.String(50), nullable=False)
+    staff_behaviour = db.Column(db.String(50), nullable=False)
+    overall_experience = db.Column(db.String(50), nullable=False)
+    comments = db.Column(db.Text, nullable=True)
+    feedback_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign keys
+    comp_id = db.Column(db.Integer, db.ForeignKey('complaint.comp_id'), nullable=False)
+    stud_id = db.Column(db.Integer, db.ForeignKey('student.stud_id'), nullable=False)
+
+    # Relationships
+    complaint = db.relationship('Complaint', backref='feedback', uselist=False)
+    student = db.relationship('Student', backref='feedbacks')

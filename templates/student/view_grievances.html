@@ -62,6 +62,9 @@
                     </td>
                     <td>
                         <a href="{{ url_for('student.grievance_details', comp_id=grievance.comp_id) }}" class="btn btn-info btn-sm">View</a>
+                        {% if grievance.comp_status == 'Resolved' %}
+                            <a href="{{ url_for('student.submit_feedback', comp_id=grievance.comp_id) }}" class="btn btn-success btn-sm">Feedback</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

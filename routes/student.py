@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
-from models import Admin, Complaint, Department, Student, db
+from models import Admin, Complaint, Department, Student, Feedback, db
 from config import Config
 
 student_bp = Blueprint('student', __name__)
@@ -33,8 +33,9 @@ def submit_grievance():
             filename = secure_filename(attachment.filename)
             attachment.save(os.path.join(Config.UPLOAD_FOLDER, filename))
 
-        # Create the new complaint object (not assigned yet to an admin)
+        # Create the new complaint object
         new_complaint = Complaint(
+            comp_title=title,  # Save the title
             comp_descr=description,
             comp_dept=category,
             comp_anonymous=anonymous,
@@ -45,20 +46,26 @@ def submit_grievance():
         # Fetch the department object based on the selected category
         department = Department.query.filter_by(dept_name=category).first()
 
-        if department:
-            # Find the least-loaded admin in this department
-            admin = get_least_loaded_admin(department)
+        if not department:
+            flash("The selected department does not exist.", "danger")
+            return redirect(url_for("student.submit_grievance"))
 
-            if admin:
-                # Assign the least-loaded admin to the complaint
-                new_complaint.admin_id = admin.admin_id
+        # Find the least-loaded admin in this department
+        admin = get_least_loaded_admin(department)
+
+        if not admin:
+            flash("No admin is available in the selected department.", "danger")
+            return redirect(url_for("student.submit_grievance"))
+
+        # Assign the least-loaded admin to the complaint
+        new_complaint.admin_id = admin.admin_id
 
         # Add the complaint to the session and commit it
         db.session.add(new_complaint)
         db.session.commit()
 
         flash("Your grievance has been submitted successfully!", "success")
-        return redirect(url_for("submit_grievance"))
+        return redirect(url_for("student.dashboard"))  # Redirect to dashboard after submission
 
     departments = Department.query.all()
     return render_template('student/submit_grievance.html', departments=departments)
@@ -137,3 +144,45 @@ def grievance_details(comp_id):
         return redirect(url_for('student.view_grievances'))
 
     return render_template('student/grievence_details.html', grievance=grievance, student=student)
+
+@student_bp.route('/submit_feedback/<int:comp_id>', methods=['GET', 'POST'])
+@login_required
+def submit_feedback(comp_id):
+    if current_user.role != 'student':
+        flash("Access denied. Only students can submit feedback.", "danger")
+        return redirect(url_for('auth.home'))
+
+    complaint = Complaint.query.get_or_404(comp_id)
+    student = Student.query.filter_by(user_id=current_user.user_id).first()
+
+    if complaint.stud_id != student.stud_id:
+        flash("You can only provide feedback for your own complaints.", "danger")
+        return redirect(url_for('student.view_grievances'))
+
+    if complaint.comp_status != 'Resolved':
+        flash("Feedback can only be provided for resolved complaints.", "danger")
+        return redirect(url_for('student.view_grievances'))
+
+    # Check if feedback already exists
+    existing_feedback = Feedback.query.filter_by(comp_id=comp_id).first()
+    if existing_feedback:
+        flash("Feedback has already been submitted for this complaint.", "warning")
+        return redirect(url_for('student.view_grievances'))
+
+    if request.method == 'POST':
+        feedback = Feedback(
+            service_quality=request.form['service_quality'],
+            staff_behaviour=request.form['staff_behaviour'],
+            overall_experience=request.form['overall_experience'],
+            comments=request.form.get('comments'),
+            comp_id=comp_id,
+            stud_id=student.stud_id
+        )
+        
+        db.session.add(feedback)
+        db.session.commit()
+        
+        flash("Thank you for your feedback!", "success")
+        return redirect(url_for('student.view_grievances'))
+
+    return render_template('student/feedback.html', complaint=complaint)
