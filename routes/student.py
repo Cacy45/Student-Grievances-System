@@ -122,67 +122,38 @@ def view_grievances():
     
     return render_template('student/view_grievances.html', grievances=grievances, selected_status=status, search_query=search_query)
 
-@student_bp.route('/grievance_details/<int:comp_id>')
+@student_bp.route('/grievance_details/<int:comp_id>', methods=['GET', 'POST'])
 @login_required
 def grievance_details(comp_id):
-    # Ensure the user is a student
     if current_user.role != 'student':
-        flash("Access denied. Only students can view grievance details.", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('auth.home'))
 
-    # Fetch the grievance by ID
-    grievance = Complaint.query.filter_by(comp_id=comp_id).first()
-
-    if not grievance:
-        flash("Grievance not found.", "warning")
-        return redirect(url_for('student.view_grievances'))
-
-    # Ensure the grievance belongs to the current student
+    grievance = Complaint.query.get_or_404(comp_id)
     student = Student.query.filter_by(user_id=current_user.user_id).first()
+    feedback = Feedback.query.filter_by(comp_id=comp_id).first()
+
     if not student or grievance.stud_id != student.stud_id:
         flash("You are not authorized to view this grievance.", "danger")
         return redirect(url_for('student.view_grievances'))
 
-    return render_template('student/grievence_details.html', grievance=grievance, student=student)
+    # Handle feedback submission
+    if request.method == 'POST' and grievance.comp_status == 'Resolved':
+        if not grievance.feedback:
+            feedback = Feedback(
+                service_quality=request.form['service_quality'],
+                staff_behaviour=request.form['staff_behaviour'],
+                overall_experience=request.form['overall_experience'],
+                comments=request.form.get('comments'),
+                comp_id=comp_id,
+                stud_id=student.stud_id
+            )
+            db.session.add(feedback)
+            db.session.commit()
+            flash("Thank you for your feedback!", "success")
+            return redirect(url_for('student.grievance_details', comp_id=comp_id))
+        else:
+            flash("Feedback has already been submitted for this grievance.", "warning")
 
-@student_bp.route('/submit_feedback/<int:comp_id>', methods=['GET', 'POST'])
-@login_required
-def submit_feedback(comp_id):
-    if current_user.role != 'student':
-        flash("Access denied. Only students can submit feedback.", "danger")
-        return redirect(url_for('auth.home'))
+    return render_template('student/grievance_details.html', grievance=grievance, student=student, user=current_user, feedback=feedback)
 
-    complaint = Complaint.query.get_or_404(comp_id)
-    student = Student.query.filter_by(user_id=current_user.user_id).first()
-
-    if complaint.stud_id != student.stud_id:
-        flash("You can only provide feedback for your own complaints.", "danger")
-        return redirect(url_for('student.view_grievances'))
-
-    if complaint.comp_status != 'Resolved':
-        flash("Feedback can only be provided for resolved complaints.", "danger")
-        return redirect(url_for('student.view_grievances'))
-
-    # Check if feedback already exists
-    existing_feedback = Feedback.query.filter_by(comp_id=comp_id).first()
-    if existing_feedback:
-        flash("Feedback has already been submitted for this complaint.", "warning")
-        return redirect(url_for('student.view_grievances'))
-
-    if request.method == 'POST':
-        feedback = Feedback(
-            service_quality=request.form['service_quality'],
-            staff_behaviour=request.form['staff_behaviour'],
-            overall_experience=request.form['overall_experience'],
-            comments=request.form.get('comments'),
-            comp_id=comp_id,
-            stud_id=student.stud_id
-        )
-        
-        db.session.add(feedback)
-        db.session.commit()
-        
-        flash("Thank you for your feedback!", "success")
-        return redirect(url_for('student.view_grievances'))
-
-    return render_template('student/feedback.html', complaint=complaint)
