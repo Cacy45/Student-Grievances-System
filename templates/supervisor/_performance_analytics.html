@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supervisor Portal{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; }
+        .navbar { background-color: #1B2021; }
+        .navbar-brand, .nav-link { color: white !important; }
+        .dashboard-container { margin-top: 20px; }
+        .dashboard-card { border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; }
+        .dashboard-square { width: 100%; }
+        .icon-container { display: flex; justify-content: center; align-items: center; height: 100%; }
+        .profile-icon { width: 80px; height: 80px; background-image: url('https://cdn-icons-png.flaticon.com/512/6522/6522516.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .row > div[class^="col-md-"] { display: flex; }
+        .row > div[class^="col-md-"] > .dashboard-card { flex: 1; }
+        .complaints-card { min-height: 200px; }
+        .footer { background-color: #1B2021; color: white; text-align: center; padding: 10px 0; margin-top: 20px; }
+    </style>
+    <style>
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: #ecf0f1;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('supervisor_dashboard') }}">Supervisor Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('supervisor_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('complaint_history') }}">Complaint History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('performance_analytics') }}">Performance Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Performance Analytics</h2>
+    
+        <!-- Overview Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card dashboard-card text-center p-3">
+                    <h5>Total Complaints Handled</h5>
+                    <h2></h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card text-center p-3">
+                    <h5>Resolved Complaints</h5>
+                    <h2></h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card text-center p-3">
+                    <h5>Pending Complaints</h5>
+                    <h2></h2>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Complaints Resolution Rate Chart -->
+        <div class="chart-container mt-4">
+            <canvas id="resolutionRateChart"></canvas>
+        </div>
+    
+        <!-- Monthly Complaints Handled Chart -->
+        <div class="chart-container mt-4">
+            <canvas id="monthlyComplaintsChart"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        // Complaints Resolution Rate Pie Chart
+        var ctx1 = document.getElementById("resolutionRateChart").getContext("2d");
+        new Chart(ctx1, {
+            type: "doughnut",
+            data: {
+                labels: ["Resolved", "Pending"],
+                datasets: [{
+                    data: [{{ resolved_complaints }}, {{ pending_complaints }}],
+                    backgroundColor: ["#2ecc71", "#e74c3c"]
+                }]
+            }
+        });
+    
+        // Monthly Complaints Handled Bar Chart
+        var ctx2 = document.getElementById("monthlyComplaintsChart").getContext("2d");
+        new Chart(ctx2, {
+            type: "bar",
+            data: {
+                labels: {{ months | tojson }},
+                datasets: [{
+                    label: "Complaints Handled",
+                    data: {{ complaints_per_month | tojson }},
+                    backgroundColor: "#3498db"
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+    
+    <footer class="footer">
+        <p>&copy;  2025 Supervisor Portal</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

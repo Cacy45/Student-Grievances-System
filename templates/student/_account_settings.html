@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+        position: relative;
+        min-height: 100vh;
+    }
+    .navbar {
+        background-color: #007bff;
+        padding: 10px 20px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .navbar a {
+        color: white;
+        text-decoration: none;
+        margin: 0 10px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: transform 0.2s, background-color 0.3s;
+        display: inline-block;
+    }
+    .navbar a:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .navbar a.logout {
+        background-color: #dc3545;
+    }
+    .navbar a.logout:hover {
+        background-color: #b02a37;
+    }
+    .container {
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        width: 50%;
+        text-align: center;
+        position: relative;
+    }
+    .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+    .btn-primary {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+    .btn-secondary {
+        position: absolute;
+        bottom: 5px;
+        left: -250px;
+        padding: 8px 12px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn-secondary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+    .footer {
+        background-color: #007bff;
+        color: white;
+        text-align: center;
+        padding: 10px;
+        margin-top: 20px;
+    }
+    .profile-icon {
+        width: 100px;
+        height: 100px;
+        background-color: white;
+        border-radius: 50%;
+        border: 3px solid #007bff;
+        margin-bottom: 15px;
+        background-image: url(https://tse1.mm.bing.net/th?id=OIP.Q00nSLTKEcoO5wUt7_dUmAHaHb&pid=Api&P=0&h=220);
+        background-size: cover;
+        background-position: center;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <div class="navbar-brand">
+        <img src="https://cdn.freelogovectors.net/wp-content/uploads/2022/03/dut_logo_freelogovectors.net_.png" alt="DUT Logo" class="logo" height="40">
+        <span style="color: white;">Student Portal</span>
+    </div>
+    <div>
+        <a href="#">Dashboard</a>
+        <a href="#">Submit Grievance</a>
+        <a href="#">Past Grievances</a>
+        <a href="#" class="logout">Logout</a>
+    </div>
+</div>
+
+<!-- Profile Edit Form -->
+<div class="container">
+    <h2>Edit Profile</h2>
+    <div class="profile-icon"></div>
+
+    <form id="profileForm">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" class="form-control" value="Cacilda" disabled>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" class="form-control" value="example@du4life.ac.za" disabled>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" class="form-control" value="0774750646">
+        </div>
+
+        <h3>Change Password</h3>
+        <div class="form-group">
+            <label for="old-password">Old Password</label>
+            <input type="password" id="old-password" class="form-control" placeholder="Enter old password">
+        </div>
+        <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" class="form-control" placeholder="Enter new password">
+        </div>
+        <div class="form-group">
+            <label for="confirm-password">Confirm New Password</label>
+            <input type="password" id="confirm-password" class="form-control" placeholder="Confirm new password">
+        </div>
+
+        <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+
+    <button class="btn-secondary" onclick="window.history.back()">⬅ Back</button>
+</div>
+
+<!-- Footer -->
+<div class="footer">&copy; 2025 Student Portal. All rights reserved.</div>
+
+<!-- JavaScript for Password Validation -->
+<script>
+    document.getElementById("profileForm").addEventListener("submit", function(event) {
+        var newPassword = document.getElementById("new-password").value;
+        var confirmPassword = document.getElementById("confirm-password").value;
+
+        if (newPassword && newPassword !== confirmPassword) {
+            alert("New password and confirm password do not match!");
+            event.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>

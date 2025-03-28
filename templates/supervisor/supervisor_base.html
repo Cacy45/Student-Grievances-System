@@ -30,7 +30,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('supervisor_dashboard') }}">Supervisor Panel</a>
+            <a class="navbar-brand" href="{{ url_for('supervisor.dashboard') }}">Supervisor Panel</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -38,20 +38,20 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('supervisor_dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}">Dashboard</a>
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('supervisor_manage_complaints') }}">Manage Complaints</a>
+                        <a class="nav-link" href="{{ url_for('supervisor.manage_complaints') }}">Manage Complaints</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('complaint_history') }}">Complaint History</a>
+                        <a class="nav-link" href="{{ url_for('supervisor.complaint_history') }}">Complaint History</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('performance_analytics') }}">Performance Analytics</a>
+                        <a class="nav-link" href="{{ url_for('supervisor.performance_analytics') }}">Performance Analytics</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                     </li>
                 </ul>
             </div>
