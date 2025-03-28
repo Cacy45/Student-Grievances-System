@@ -7,9 +7,17 @@ def seed_data():
     db.create_all()
 
     # Create departments
-    dept1 = Department(dept_name="Computer Science")
-    dept2 = Department(dept_name="Mechanical Engineering")
-    db.session.add_all([dept1, dept2])
+    dept1 = Department(dept_name="Department of Finance")
+    dept2 = Department(dept_name="Department of Student Housing and Residence Life")
+    dept3 = Department(dept_name="Office of Registrar")
+    dept4 = Department(dept_name="Department of Student Governance and Development")
+    dept5 = Department(dept_name="Department of Facilities Management")
+    dept6 = Department(dept_name="Information Technology Support (ITSS)")
+    dept7 = Department(dept_name="Library Services")
+    dept8 = Department(dept_name="Department of Student Health and Wellness")
+    dept9 = Department(dept_name="International Education and Partnerships Office")
+    dept10 = Department(dept_name="Department of Protection Services")
+    db.session.add_all([dept1, dept2, dept3, dept4, dept5, dept6, dept7, dept8, dept9, dept10])
 
     # Create users
     user1 = User(fname="John", lname="Doe", email="john.doe@dut4life.ac.za", phone="1234567890",
